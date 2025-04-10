@@ -30,13 +30,13 @@ Remove left recursion:
 ```
 exp -> powexp ExpTail
 
-ExpTail -> op ExpTail | ε
+ExpTail -> op powexp ExpTail | ε
 
 op -> + | -
 
 powexp -> factor PowexpTail
 
-PowexpTail -> ** factor | ε
+PowexpTail -> ** factor PowexpTail | ε
 
 factor -> num | (exp)
 
