@@ -1,4 +1,7 @@
+package ExpressionEvaluator;
+
 import java.io.IOException;
+import java.io.InputStream;
 
 public class ExpressionEvaluator {
     private final InputStream in;
