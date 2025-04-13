@@ -10,6 +10,8 @@ public class ExpressionEvaluator {
     public ExpressionEvaluator(InputStream in) throws IOException {
         this.in = in;
         lookahead = in.read();
+        while (isWhitespace(lookahead))
+            lookahead = in.read();
     }
 
     public int eval() throws IOException, ParseError {
@@ -20,15 +22,17 @@ public class ExpressionEvaluator {
     }
 
     private void consume(int symbol) throws IOException, ParseError {
-        if (lookahead == symbol)
-            lookahead = in.read();
-        else
+        if (lookahead != symbol)
             throw new ParseError();
+
+        lookahead = in.read();
+        while (isWhitespace(lookahead))
+            lookahead = in.read();
     }
 
-    private boolean isDigit(int c) {
-        return '0' <= c && c <= '9';
-    }
+    private boolean isDigit(int c) { return '0' <= c && c <= '9'; }
+
+    private boolean isWhitespace(int c) { return c == ' ' || c == '\t'; }
 
     private int evalDigit(int c) {
         return c - '0';
