@@ -36,7 +36,7 @@ op -> + | -
 
 powexp -> factor PowexpTail
 
-PowexpTail -> ** factor PowexpTail | ε
+PowexpTail -> ** powexp PowexpTail | ε
 
 factor -> num | (exp)
 

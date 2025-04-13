@@ -70,7 +70,7 @@ public class ExpressionEvaluator {
         if (lookahead == '*') {
             consume('*', false);
             consume('*', true);
-            int val = Factor();
+            int val = PowExpr();
             return PowExprTail((int) Math.pow(left, val));
         }
 
