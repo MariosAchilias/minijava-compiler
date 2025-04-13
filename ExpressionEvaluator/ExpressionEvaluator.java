@@ -9,9 +9,8 @@ public class ExpressionEvaluator {
 
     public ExpressionEvaluator(InputStream in) throws IOException {
         this.in = in;
-        lookahead = in.read();
-        while (isWhitespace(lookahead))
-            lookahead = in.read();
+        do lookahead = in.read();
+        while (isWhitespace(lookahead));
     }
 
     public int eval() throws IOException, ParseError {
@@ -21,13 +20,16 @@ public class ExpressionEvaluator {
         return value;
     }
 
-    private void consume(int symbol) throws IOException, ParseError {
+    private void consume(int symbol, boolean expectWhitespace) throws IOException, ParseError {
         if (lookahead != symbol)
             throw new ParseError();
 
         lookahead = in.read();
-        while (isWhitespace(lookahead))
+        while (isWhitespace(lookahead)) {
+            if (!expectWhitespace)
+                throw new ParseError();
             lookahead = in.read();
+        }
     }
 
     private boolean isDigit(int c) { return '0' <= c && c <= '9'; }
@@ -47,11 +49,11 @@ public class ExpressionEvaluator {
         int rightop;
         switch (lookahead) {
             case '+':
-                consume('+');
+                consume('+', true);
                 rightop = PowExpr();
                 return ExprTail(leftop + rightop);
             case '-':
-                consume('-');
+                consume('-', true);
                 rightop = PowExpr();
                 return ExprTail(leftop - rightop);
             default:
@@ -66,8 +68,8 @@ public class ExpressionEvaluator {
 
     private int PowExprTail(int left) throws IOException, ParseError {
         if (lookahead == '*') {
-            consume('*');
-            consume('*');
+            consume('*', false);
+            consume('*', true);
             int val = Factor();
             return PowExprTail((int) Math.pow(left, val));
         }
@@ -77,14 +79,14 @@ public class ExpressionEvaluator {
 
     private int Factor() throws IOException, ParseError {
         if (lookahead == '(') {
-            consume('(');
+            consume('(', true);
             int val = Expr();
-            consume(')');
+            consume(')', true);
             return val;
         }
         if (isDigit(lookahead)) {
             int value = evalDigit(lookahead);
-            consume(lookahead);
+            consume(lookahead, false);
             return value;
         }
         throw new ParseError();
