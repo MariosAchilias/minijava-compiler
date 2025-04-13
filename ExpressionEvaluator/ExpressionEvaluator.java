@@ -63,17 +63,21 @@ public class ExpressionEvaluator {
     private int PowExprTail(int left) throws IOException, ParseError {
         if (lookahead == '*') {
             consume('*');
-            if (lookahead == '*') {
-                consume('*');
-                int val = Factor();
-                return PowExprTail((int) Math.pow(left, val));
-            }
+            consume('*');
+            int val = Factor();
+            return PowExprTail((int) Math.pow(left, val));
         }
 
         return left;
     }
 
     private int Factor() throws IOException, ParseError {
+        if (lookahead == '(') {
+            consume('(');
+            int val = Expr();
+            consume(')');
+            return val;
+        }
         if (isDigit(lookahead)) {
             int value = evalDigit(lookahead);
             consume(lookahead);
