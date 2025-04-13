@@ -20,14 +20,14 @@ public class ExpressionEvaluator {
         return value;
     }
 
-    private void consume(int symbol, boolean expectWhitespace) throws IOException, ParseError {
+    private void consume(int symbol, boolean ignoreWhitespace) throws IOException, ParseError {
         if (lookahead != symbol)
             throw new ParseError();
 
         lookahead = in.read();
+        if (!ignoreWhitespace)
+            return;
         while (isWhitespace(lookahead)) {
-            if (!expectWhitespace)
-                throw new ParseError();
             lookahead = in.read();
         }
     }
@@ -84,12 +84,28 @@ public class ExpressionEvaluator {
             consume(')', true);
             return val;
         }
-        if (isDigit(lookahead)) {
-            int value = evalDigit(lookahead);
-            consume(lookahead, false);
-            return value;
-        }
-        throw new ParseError();
+
+        return Num();
     }
 
+    private int Num() throws IOException, ParseError {
+        if (!isDigit(lookahead))
+            throw new ParseError();
+
+        String first = Integer.toString(evalDigit(lookahead));
+        consume(lookahead, false);
+        return Integer.parseInt(NumTail(first));
+    }
+
+    private String NumTail(String accum) throws IOException, ParseError {
+        if (!isDigit(lookahead)) {
+            // skip trailing whitespace
+            if (isWhitespace(lookahead))
+                consume(lookahead, true);
+            return accum;
+        }
+        String res = accum.concat(Integer.toString(evalDigit(lookahead)));
+        consume(lookahead, false);
+        return NumTail(res);
+    }
 }
