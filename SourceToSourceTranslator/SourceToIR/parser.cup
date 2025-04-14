@@ -3,6 +3,7 @@
  *  Package and Import Specifications
  */
 import java_cup.runtime.*;
+import SourceToSourceTranslator.*;
 
 /**
  *  Usercode Components
@@ -21,12 +22,12 @@ scan with {: return s.next_token(); :};
  */
 
 /* Terminals (tokens returned by the scanner). */
-terminal            SEMI, PLUS, MINUS, TIMES, LPAREN, RPAREN;
-terminal String     STRING_LITERAL;        // our scanner provides numbers as strings
+terminal            SEMI, PLUS, MINUS, TIMES, LPAREN, RPAREN, LBRACK, RBRACK, COMMA, ID;
+terminal String     STRING_LITERAL;
 
 /*  Non terminals */
-non terminal            expr_list;
-non terminal Integer    expr;      // used to store evaluated subexpressions
+non terminal           func_decl, func_call, if_else;
+non terminal String    expr;      // used to store evaluated subexpressions (all expressions evaluate to strings)
 
 /**
  *  Precedence Declarations
