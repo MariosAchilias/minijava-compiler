@@ -1,4 +1,5 @@
 /* JFlex example: part of Java language lexer specification */
+package SourceToSourceTranslator;
 import java_cup.runtime.*;
 %%
 /* -----------------Options and Declarations Section----------------- */
@@ -56,6 +57,8 @@ LineTerminator = \r|\n|\r\n
 /* White space is a line terminator, space, tab, or line feed. */
 WhiteSpace     = {LineTerminator} | [ \t\f]
 
+id      = [a-z][a-z]*
+
 %state STRING
 
 %%
@@ -64,14 +67,16 @@ WhiteSpace     = {LineTerminator} | [ \t\f]
 <YYINITIAL> {
 /* operators */
  "+"            { return symbol(sym.PLUS); }
- "-"            { return symbol(sym.MINUS); }
- "*"            { return symbol(sym.TIMES); }
  "("            { return symbol(sym.LPAREN); }
  ")"            { return symbol(sym.RPAREN); }
- ";"            { return symbol(sym.SEMI); }
+ "{"            { return symbol(sym.LBRACK); }
+ "}"            { return symbol(sym.RBRACK); }
+ ","            { return symbol(sym.COMMA);  }
  \"             { stringBuffer.setLength(0); yybegin(STRING); }
  {WhiteSpace}   { /* just skip what was found, do nothing */ }
 }
+
+{id} {return symbol(sym.ID, new String(yytext())); }
 
 <STRING> {
       \"                             { yybegin(YYINITIAL);
