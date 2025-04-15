@@ -26,8 +26,8 @@ terminal            EQUALS, PLUS, IF, ELSE, OP, REV, LPAREN, RPAREN, LBRACK, RBR
 terminal String     STRING_LITERAL;
 
 /*  Non terminals */
-non terminal           func_decl, if_else, statement_list, program, declaration, decl_func, function_declarations, top_level_statements, decl_arg_list, call_arg_list, statement, func_call;
-non terminal String    expr;      // used to store evaluated subexpressions (all expressions evaluate to strings)
+non terminal           func_decl, if_else, statement_list, program, decl_func, function_declarations, top_level_statements, decl_arg_list, call_arg_list, statement, func_call, expr;
+non terminal String    declaration;
 /**
  *  Precedence Declarations
  */
@@ -37,20 +37,21 @@ non terminal String    expr;      // used to store evaluated subexpressions (all
  *  The Grammar Rules
  */
 
-program                 ::= function_declarations top_level_statements                      {::}
+program                 ::= function_declarations:declarations top_level_statements:statements  {: System.out.println(statements); System.out.println(declarations); :}
 ;
-function_declarations   ::= function_declarations declaration                               {::}
-                        |                                                                   {::}
+function_declarations   ::= function_declarations:list declaration:d                            {: RESULT = list + d;:}
+                        |  declaration:d                                                        {: RESULT = d; :}
 ;
-declaration             ::= decl_func expr RBRACK
+declaration             ::= decl_func:decl expr:e RBRACK                                        {: RESULT = "public static String " + decl + "{\n return " + e + ";\n}"; :}
 ;
-decl_func               ::= ID LPAREN decl_arg_list:arguments RPARENLBRACK                       {: System.out.println("declared func\n"); :}
-                        |   ID LPAREN RPARENLBRACK                                               {::}
+decl_func               ::= ID:name LPAREN decl_arg_list:arguments RPARENLBRACK                  {: RESULT = name + "(" + arguments + ")"; :}
+                        |   ID:name LPAREN RPARENLBRACK                                          {: RESULT = name +"()"; :}
+
 ;
 decl_arg_list           ::= decl_arg_list:list COMMA ID:id                                  {: RESULT = list + ", " + id; :}
-                        |   ID:id                                                           {: RESULT = id; :}
+                        |   ID:id                                                           {: RESULT = "String " + id; :}
 ;
-top_level_statements    ::= statement_list:s                                                {:System.out.println("public class Translated {\n\t public static void main(String[] args) {\n" + s + "}"); :}
+top_level_statements    ::= statement_list:s                                                {:System.out.println("public class Translated {\n\t public static void main(String[] args) {\n" + s + "}\n"); :}
 ;
 statement_list          ::= statement_list:list statement:s                                 {: RESULT = list + "\t\tSystem.out.println(" + s + ");\n"; :}
                         | statement:s                                                         {: RESULT = "\t\tSystem.out.println(" + s + ");\n"; :}
