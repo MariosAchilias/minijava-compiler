@@ -26,9 +26,9 @@ terminal            EQUALS, PLUS, IF, ELSE, OP, REV, LPAREN, RPAREN, LBRACK, RBR
 terminal String     STRING_LITERAL;
 
 /*  Non terminals */
-non terminal           func_decl, func_call, if_else, statement_list, top_level_statements;
+non terminal           func_decl, if_else, statement_list, top_level_statements, argument_list, identifier;
 non terminal String    expr;      // used to store evaluated subexpressions (all expressions evaluate to strings)
-
+non terminal String    statement, func_call;
 /**
  *  Precedence Declarations
  */
@@ -38,7 +38,18 @@ non terminal String    expr;      // used to store evaluated subexpressions (all
  */
 top_level_statements ::= statement_list:s        {:System.out.println("public class Translated {\n\t public static void main(String[] args) {\n" + s + "}"); :}
 ;
-statement_list ::= statement_list:s expr:e      {: RESULT = s + e; :}
+statement_list ::= statement_list:list statement:s      {: RESULT = list + s; :}
+            |                                   {: RESULT = ""; :}
+;
+statement       ::= expr:e                       {: RESULT = e; :}
+                   | func_call:call              {: RESULT = "\t\tSystem.out.println(" + call + ");\n"; :}
+;
+func_call       ::= identifier:id LPAREN argument_list:arguments RPAREN {: RESULT = id + "(" + arguments + ")";:}
+;
+identifier      ::= ID:id                           {: RESULT = id; :}
+;
+argument_list   ::= argument_list:list COMMA identifier:id {: RESULT = list + ", " + id; :}
+            |   ID:id                              {: RESULT = id; :}
             |                                   {: RESULT = ""; :}
 ;
 expr      ::= STRING_LITERAL:s	                {: RESULT = "\t\tSystem.out.println(\"" + s + "\");\n"; :}
