@@ -60,6 +60,8 @@ id      = [a-z][a-z]*
 
 BinaryOp = suffix | prefix
 
+ParenthesisBracket = [)][ \t\f]*[{]
+
 %state STRING
 
 %%
@@ -67,6 +69,7 @@ BinaryOp = suffix | prefix
 
 <YYINITIAL> {
 /* operators */
+ {ParenthesisBracket} { return symbol(sym.RPARENLBRACK); }
  "+"            { return symbol(sym.PLUS); }
  "("            { return symbol(sym.LPAREN); }
  ")"            { return symbol(sym.RPAREN); }
