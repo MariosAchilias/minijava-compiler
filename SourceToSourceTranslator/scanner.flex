@@ -1,5 +1,4 @@
 /* JFlex example: part of Java language lexer specification */
-package SourceToSourceTranslator;
 import java_cup.runtime.*;
 %%
 /* -----------------Options and Declarations Section----------------- */

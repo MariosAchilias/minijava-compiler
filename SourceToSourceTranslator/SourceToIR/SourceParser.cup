@@ -1,0 +1,40 @@
+package SourceToSourceTranslator.SourceToIR;
+/* Simple +/-/* expression language; parser evaluates constant expressions on the fly*/
+/**
+ *  Package and Import Specifications
+ */
+import java_cup.runtime.*;
+
+/**
+ *  Usercode Components
+ */
+parser code {:
+    // Connect this parser to a scanner!
+    Lexer s;
+    Parser(Lexer s){ this.s=s; }
+:}
+
+/* define how to connect to the scanner! */
+scan with {: return s.next_token(); :};
+
+/**
+ *  Symbol Lists
+ */
+
+/* Terminals (tokens returned by the scanner). */
+terminal            EQUALS, PLUS, IF, ELSE, OP, REV, LPAREN, RPAREN, LBRACK, RBRACK, COMMA, ID;
+terminal String     STRING_LITERAL;
+
+/*  Non terminals */
+non terminal           func_decl, func_call, if_else, expr_list;
+non terminal String    expr;      // used to store evaluated subexpressions (all expressions evaluate to strings)
+
+/**
+ *  Precedence Declarations
+ */
+
+/**
+ *  The Grammar Rules
+ */
+expr      ::= STRING_LITERAL:s	            {: RESULT = s;  :}
+             ;

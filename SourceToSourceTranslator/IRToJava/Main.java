@@ -1,7 +1,9 @@
-package SourceToSourceTranslator.SourceToIR;
+package SourceToSourceTranslator.IRToJava;
 
-import java_cup.runtime.*;
-import java.io.*;
+import SourceToSourceTranslator.SourceToIR.Lexer;
+import SourceToSourceTranslator.SourceToIR.Parser;
+
+import java.io.InputStreamReader;
 
 class Main {
     public static void main(String[] argv) throws Exception{
