@@ -59,6 +59,8 @@ WhiteSpace     = {LineTerminator} | [ \t\f]
 
 id      = [a-z][a-z]*
 
+BinaryOp = suffix | prefix
+
 %state STRING
 
 %%
@@ -72,11 +74,16 @@ id      = [a-z][a-z]*
  "{"            { return symbol(sym.LBRACK); }
  "}"            { return symbol(sym.RBRACK); }
  ","            { return symbol(sym.COMMA);  }
+ "="            { return symbol(sym.EQUALS); }
  \"             { stringBuffer.setLength(0); yybegin(STRING); }
  {WhiteSpace}   { /* just skip what was found, do nothing */ }
+ "reverse"      { return symbol(sym.REV); }
+ "if"           { return symbol(sym.IF); }
+ "else"         { return symbol(sym.ELSE); }
+ {BinaryOp}       { return symbol(sym.OP, new String(yytext())); }
+ {id} {return symbol(sym.ID, new String(yytext())); }
 }
 
-{id} {return symbol(sym.ID, new String(yytext())); }
 
 <STRING> {
       \"                             { yybegin(YYINITIAL);
