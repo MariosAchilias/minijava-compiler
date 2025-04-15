@@ -26,7 +26,7 @@ terminal            EQUALS, PLUS, IF, ELSE, OP, REV, LPAREN, RPAREN, LBRACK, RBR
 terminal String     STRING_LITERAL;
 
 /*  Non terminals */
-non terminal           func_decl, func_call, if_else, expr_list;
+non terminal           func_decl, func_call, if_else, statement_list, top_level_statements;
 non terminal String    expr;      // used to store evaluated subexpressions (all expressions evaluate to strings)
 
 /**
@@ -36,5 +36,10 @@ non terminal String    expr;      // used to store evaluated subexpressions (all
 /**
  *  The Grammar Rules
  */
-expr      ::= STRING_LITERAL:s	            {: RESULT = s;  :}
+top_level_statements ::= statement_list:s        {:System.out.println("public class Translated {\n\t public static void main(String[] args) {\n" + s + "}"); :}
+;
+statement_list ::= statement_list:s expr:e      {: RESULT = s + e; :}
+            |                                   {: RESULT = ""; :}
+;
+expr      ::= STRING_LITERAL:s	                {: RESULT = "\t\tSystem.out.println(\"" + s + "\");\n"; :}
              ;
