@@ -1,9 +1,10 @@
 package SourceToSourceTranslator.IRToJava;
 
-import SourceToSourceTranslator.SourceToIR.Lexer;
-import SourceToSourceTranslator.SourceToIR.Parser;
+import java_cup.runtime.*;
+import java.io.*;
 
-import java.io.InputStreamReader;
+import SourceToSourceTranslator.IRToJava.Lexer;
+import SourceToSourceTranslator.IRToJava.Parser;
 
 class Main {
     public static void main(String[] argv) throws Exception{
