@@ -12,3 +12,11 @@
 
 Lexer.java
 Parser.java
+/SourceToSourceTranslator/examples/ex1.txt
+/SourceToSourceTranslator/examples/ex2.txt
+/SourceToSourceTranslator/examples/ex3.txt
+/java-cup-11b.jar
+/java-cup-11b-runtime.jar
+/SourceToSourceTranslator/jflex.bat
+/SourceToSourceTranslator/IRToJava/sym.java
+/SourceToSourceTranslator/SourceToIR/sym.java
