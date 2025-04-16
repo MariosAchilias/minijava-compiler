@@ -26,7 +26,7 @@ terminal            EQUALS, PLUS, IF, ELSE, REV, LPAREN, RPAREN, LBRACK, RBRACK,
 terminal String     STRING_LITERAL;
 
 /*  Non terminals */
-non terminal           func_decl, if_else, statement_list, program, decl_func, function_declarations, top_level_statements, decl_arg_list, call_arg_list, statement, func_call, expr, condition;
+non terminal           if_else, statement_list, program, decl_func, function_declarations, decl_arg_list, call_arg_list, func_call, expr, condition;
 non terminal String    declaration;
 /**
  *  Precedence Declarations
@@ -41,9 +41,9 @@ precedence left expr;
  *  The Grammar Rules
  */
 
-program                 ::= function_declarations:declarations top_level_statements:statements  {: System.out.println(statements); System.out.println(declarations); System.out.println("}"); :}
-                        | function_declarations:declarations                                    {: System.out.println(declarations); System.out.println("}"); :}
-                        | top_level_statements:statements                                       {: System.out.println(statements); System.out.println("}"); :}
+program                 ::= function_declarations:declarations statement_list:statements        {: System.out.println("public class Translated {\n\t public static void main(String[] args) {\n" + statements + "\t}\n"); System.out.println(declarations); System.out.println("}"); :}
+                        | function_declarations:declarations                                    {: System.out.println("public class Translated {\n\t public static void main(String[] args) {\n\t}\n"); System.out.println(declarations); System.out.println("}"); :}
+                        | statement_list:statements                                             {: System.out.println("public class Translated {\n\t public static void main(String[] args) {\n" + s + "\t}\n}"); :}
 ;
 function_declarations   ::= function_declarations:list declaration:d                            {: RESULT = list + d;:}
                         |  declaration:d                                                        {: RESULT = d; :}
@@ -57,8 +57,6 @@ decl_func               ::= ID:name LPAREN decl_arg_list:arguments ID:last_arg R
 ;
 decl_arg_list           ::= decl_arg_list:list ID:id COMMA                                  {: RESULT = list + ", " + id; :}
                         |   ID:id COMMA                                                     {: RESULT = "String " + id; :}
-;
-top_level_statements    ::= statement_list:s                                                {:System.out.println("public class Translated {\n\t public static void main(String[] args) {\n" + s + "\t}\n"); :}
 ;
 statement_list          ::= statement_list:list expr:e                                 {: RESULT = list + "\t\tSystem.out.println(" + e + ");\n"; :}
                         | expr:e                                                         {: RESULT = "\t\tSystem.out.println(" + e + ");\n"; :}
