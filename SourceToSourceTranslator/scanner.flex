@@ -77,7 +77,7 @@ ParenthesisBracket = [)][ \t\f]*[{]
  "="            { return symbol(sym.EQUALS); }
  \"             { stringBuffer.setLength(0); yybegin(STRING); }
  {WhiteSpace}   { /* just skip what was found, do nothing */ }
- "reverse"      { return symbol(sym.REV); }
+ "reverse"      { return symbol(sym.REVERSE); }
  "if"           { return symbol(sym.IF); }
  "else"         { return symbol(sym.ELSE); }
  "prefix"       { return symbol(sym.PREFIX); }
