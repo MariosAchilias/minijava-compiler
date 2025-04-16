@@ -58,8 +58,6 @@ WhiteSpace     = {LineTerminator} | [ \t\f]
 
 id      = [a-z][a-z]*
 
-BinaryOp = suffix | prefix
-
 ParenthesisBracket = [)][ \t\f]*[{]
 
 %state STRING
@@ -82,7 +80,8 @@ ParenthesisBracket = [)][ \t\f]*[{]
  "reverse"      { return symbol(sym.REV); }
  "if"           { return symbol(sym.IF); }
  "else"         { return symbol(sym.ELSE); }
- {BinaryOp}       { return symbol(sym.OP, new String(yytext())); }
+ "prefix"       { return symbol(sym.PREFIX); }
+ "suffix"       { return symbol(sym.SUFFIX); }
  {id} {return symbol(sym.ID, new String(yytext())); }
 }
 
