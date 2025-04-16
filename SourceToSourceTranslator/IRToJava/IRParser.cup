@@ -38,6 +38,8 @@ non terminal String    declaration;
  */
 
 program                 ::= function_declarations:declarations top_level_statements:statements  {: System.out.println(statements); System.out.println(declarations); :}
+                        | function_declarations:declarations                                    {: System.out.println(declarations); :}
+                        | top_level_statements:statements                                       {: System.out.println(statements); :}
 ;
 function_declarations   ::= function_declarations:list declaration:d                            {: RESULT = list + d;:}
                         |  declaration:d                                                        {: RESULT = d; :}
@@ -51,7 +53,7 @@ decl_func               ::= ID:name LPAREN decl_arg_list:arguments RPARENLBRACK 
 decl_arg_list           ::= decl_arg_list:list COMMA ID:id                                  {: RESULT = list + ", " + id; :}
                         |   ID:id                                                           {: RESULT = "String " + id; :}
 ;
-top_level_statements    ::= statement_list:s                                                {:System.out.println("public class Translated {\n\t public static void main(String[] args) {\n" + s + "}\n"); :}
+top_level_statements    ::= statement_list:s                                                {:System.out.println("public class Translated {\n\t public static void main(String[] args) {\n" + s + "\t}\n"); :}
 ;
 statement_list          ::= statement_list:list statement:s                                 {: RESULT = list + "\t\tSystem.out.println(" + s + ");\n"; :}
                         | statement:s                                                         {: RESULT = "\t\tSystem.out.println(" + s + ");\n"; :}
