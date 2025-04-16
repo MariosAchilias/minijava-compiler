@@ -22,7 +22,7 @@ scan with {: return s.next_token(); :};
  */
 
 /* Terminals (tokens returned by the scanner). */
-terminal            EQUALS, PLUS, IF, ELSE, REVERSE, LPAREN, RPAREN, LBRACK, RBRACK, RPARENLBRACK, COMMA, PREFIX, SUFFIX;
+terminal            PLUS, IF, ELSE, REVERSE, LPAREN, RPAREN, LBRACK, RBRACK, RPARENLBRACK, COMMA, PREFIX;
 terminal String     ID, STRING_LITERAL;
 
 /*  Non terminals */
