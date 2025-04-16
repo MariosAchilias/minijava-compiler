@@ -10,8 +10,8 @@ build:
 	make -C IRToJava
 
 execute:
-	java -cp "SourceToSourceTranslator/java-cup-11b-runtime.jar:." SourceToSourceTranslator.SourceToIR.Main > Translated.ir
-	java -cp "SourceToSourceTranslator/java-cup-11b-runtime.jar:." SourceToSourceTranslator.IRToJava.Main < Translated.ir > Translated.java
+	cd .. && java -cp "SourceToSourceTranslator/java-cup-11b-runtime.jar:." SourceToSourceTranslator.SourceToIR.Main > Translated.ir
+	cd .. && java -cp "SourceToSourceTranslator/java-cup-11b-runtime.jar:." SourceToSourceTranslator.IRToJava.Main < Translated.ir > Translated.java
 
 clean:
 	rm -f *.class *~ Lexer.java
