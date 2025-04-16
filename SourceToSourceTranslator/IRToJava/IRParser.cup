@@ -53,7 +53,7 @@ program                 ::= function_declarations:declarations statement_list:st
 function_declarations   ::= function_declarations:list declaration:d                            {: RESULT = list + d;:}
                         |  declaration:d                                                        {: RESULT = d; :}
 ;
-declaration             ::= decl_func:decl expr:e RBRACK                                        {: RESULT = "public static String " + decl + "{\n return " + e + ";\n}"; :}
+declaration             ::= decl_func:decl expr:e RBRACK                                        {: RESULT = "\tpublic static String " + decl + " {\n\t\treturn " + e + ";\n\t}\n\n"; :}
 ;
 decl_func               ::= ID:name LPAREN decl_arg_list:arguments ID:last_arg RPARENLBRACK                  {: RESULT = name + "(" + arguments + ", String "+ last_arg + ")"; :}
                         |   ID:name LPAREN RPARENLBRACK                                          {: RESULT = name +"()"; :}

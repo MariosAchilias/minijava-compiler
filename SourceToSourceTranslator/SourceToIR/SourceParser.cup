@@ -50,7 +50,7 @@ program                 ::= function_declarations:declarations statement_list:st
 function_declarations   ::= function_declarations:list declaration:d                            {: RESULT = list + d;:}
                         |  declaration:d                                                        {: RESULT = d; :}
 ;
-declaration             ::= decl_func:decl expr:e RBRACK                                        {: RESULT = decl + " {\n\t" + e + "\n}\n"; :}
+declaration             ::= decl_func:decl expr:e RBRACK                                        {: RESULT = decl + " {\n\t" + e + "\n}\n\n"; :}
 ;
 decl_func               ::= ID:name LPAREN decl_arg_list:arguments ID:last_arg RPARENLBRACK     {: RESULT = name + "(" + arguments + ", " + last_arg + ")"; :}
                         |   ID:name LPAREN RPARENLBRACK                                         {: RESULT = name +"()"; :}
