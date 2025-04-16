@@ -47,9 +47,17 @@ num -> digit NumTail
 NumTail -> digit NumTail | ε
 ```
 
+Build: (input read from stdin)
+
+```bash
+cd ExpressionEvaluator
+make
+make execute
+```
+
 # Part 2
 
-Produces correct output on all 3 given examples.
+Produces expected output on all 3 given examples.
 
 Build and run examples as such:
 ```bash
