@@ -55,19 +55,19 @@ function_declarations   ::= function_declarations:list declaration:d            
 ;
 declaration             ::= decl_func:decl expr:e RBRACK                                        {: RESULT = "public static String " + decl + "{\n return " + e + ";\n}"; :}
 ;
-decl_func               ::= ID:name LPAREN decl_arg_list:arguments ID:last_arg RPARENLBRACK                  {: RESULT = name + "(" + arguments + "String "+ last_arg + ")"; :}
+decl_func               ::= ID:name LPAREN decl_arg_list:arguments ID:last_arg RPARENLBRACK                  {: RESULT = name + "(" + arguments + ", String "+ last_arg + ")"; :}
                         |   ID:name LPAREN RPARENLBRACK                                          {: RESULT = name +"()"; :}
                         |   ID:name LPAREN ID:arg RPARENLBRACK                                          {: RESULT = name+"("+arg+")"; :}
 
 ;
-decl_arg_list           ::= decl_arg_list:list ID:id COMMA                                  {: RESULT = list + ", String" + id; :}
+decl_arg_list           ::= decl_arg_list:list ID:id COMMA                                  {: RESULT = list + ", String " + id; :}
                         |   ID:id COMMA                                                     {: RESULT = "String " + id; :}
 ;
 statement_list          ::= statement_list:list expr:e                                 {: RESULT = list + "\t\tSystem.out.println(" + e + ");\n"; :}
                         | expr:e                                                         {: RESULT = "\t\tSystem.out.println(" + e + ");\n"; :}
 ;
 func_call               ::= ID:func LPAREN call_arg_list:arguments RPAREN                        {: RESULT = func + "(" + arguments + ")"; :}
-                        | ID LPAREN RPAREN                                                       {::}
+                        | ID:func LPAREN RPAREN                                                       {: RESULT = func + "()"; :}
 ;
 call_arg_list           ::= call_arg_list:list COMMA expr:e                                 {: RESULT = list + ", " + e; :}
                         |   expr:e                                                          {: RESULT = e; :}

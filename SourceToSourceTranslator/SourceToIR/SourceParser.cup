@@ -50,9 +50,9 @@ program                 ::= function_declarations:declarations statement_list:st
 function_declarations   ::= function_declarations:list declaration:d                            {: RESULT = list + d;:}
                         |  declaration:d                                                        {: RESULT = d; :}
 ;
-declaration             ::= decl_func:decl expr:e RBRACK                                        {: RESULT = decl + "{" + e + "}\n"; :}
+declaration             ::= decl_func:decl expr:e RBRACK                                        {: RESULT = decl + " {\n\t" + e + "\n}\n"; :}
 ;
-decl_func               ::= ID:name LPAREN decl_arg_list:arguments ID:last_arg RPARENLBRACK     {: RESULT = name + "(" + arguments + last_arg + ")"; :}
+decl_func               ::= ID:name LPAREN decl_arg_list:arguments ID:last_arg RPARENLBRACK     {: RESULT = name + "(" + arguments + ", " + last_arg + ")"; :}
                         |   ID:name LPAREN RPARENLBRACK                                         {: RESULT = name +"()"; :}
                         |   ID:name LPAREN ID:arg RPARENLBRACK                                  {: RESULT = name+"("+arg+")"; :}
 
@@ -64,7 +64,7 @@ statement_list          ::= statement_list:list expr:e                          
                         | expr:e                                                         {: RESULT =  e + "\n"; :}
 ;
 func_call               ::= ID:func LPAREN call_arg_list:arguments RPAREN                        {: RESULT = func + "(" + arguments + ")"; :}
-                        | ID LPAREN RPAREN                                                       {::}
+                        | ID:func LPAREN RPAREN                                                       {: RESULT = func + "()"; :}
 ;
 call_arg_list           ::= call_arg_list:list COMMA expr:e                                 {: RESULT = list + ", " + e; :}
                         |   expr:e                                                          {: RESULT = e; :}

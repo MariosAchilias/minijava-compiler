@@ -56,7 +56,7 @@ LineTerminator = \r|\n|\r\n
 /* White space is a line terminator, space, tab, or line feed. */
 WhiteSpace     = {LineTerminator} | [ \t\f]
 
-id      = [a-z][a-z]*
+id      = [a-zA-Z_][a-zA-Z0-9_]*
 
 ParenthesisBracket = [)][ \t\f]*[{]
 
