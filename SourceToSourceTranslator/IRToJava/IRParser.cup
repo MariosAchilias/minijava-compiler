@@ -33,6 +33,10 @@ non terminal String    declaration;
  */
 precedence left PLUS;
 
+/* Solve conflict between expressions and declaration arguments */
+precedence left COMMA;
+precedence left expr;
+
 /**
  *  The Grammar Rules
  */
@@ -46,12 +50,13 @@ function_declarations   ::= function_declarations:list declaration:d            
 ;
 declaration             ::= decl_func:decl expr:e RBRACK                                        {: RESULT = "public static String " + decl + "{\n return " + e + ";\n}"; :}
 ;
-decl_func               ::= ID:name LPAREN decl_arg_list:arguments RPARENLBRACK                  {: RESULT = name + "(" + arguments + ")"; :}
+decl_func               ::= ID:name LPAREN decl_arg_list:arguments ID:last_arg RPARENLBRACK                  {: RESULT = name + "(" + arguments + "String "+ last_arg + ")"; :}
                         |   ID:name LPAREN RPARENLBRACK                                          {: RESULT = name +"()"; :}
+                        |   ID:name LPAREN ID:arg RPARENLBRACK                                          {: RESULT = name+"("+arg+")"; :}
 
 ;
-decl_arg_list           ::= decl_arg_list:list COMMA ID:id                                  {: RESULT = list + ", " + id; :}
-                        |   ID:id                                                           {: RESULT = "String " + id; :}
+decl_arg_list           ::= decl_arg_list:list ID:id COMMA                                  {: RESULT = list + ", " + id; :}
+                        |   ID:id COMMA                                                     {: RESULT = "String " + id; :}
 ;
 top_level_statements    ::= statement_list:s                                                {:System.out.println("public class Translated {\n\t public static void main(String[] args) {\n" + s + "\t}\n"); :}
 ;
@@ -72,4 +77,5 @@ expr                    ::= expr:e1 PLUS expr:e2                                
                         | STRING_LITERAL:s	                                            {: RESULT = "\"" + s + "\"";:}
                         | func_call:call                                                    {: RESULT = call; :}
                         | if_else:ternary                                                   {: RESULT = ternary; :}
+                        | ID:id                                                             {: RESULT = id; :}
 ;
