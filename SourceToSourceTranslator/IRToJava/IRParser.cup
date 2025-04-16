@@ -31,7 +31,7 @@ non terminal String    declaration;
 /**
  *  Precedence Declarations
  */
-//precedence right FUNC;
+precedence left PLUS;
 
 /**
  *  The Grammar Rules
@@ -67,5 +67,6 @@ func_call               ::= ID:func LPAREN call_arg_list:arguments RPAREN       
 call_arg_list           ::= call_arg_list:list COMMA expr:e                                 {: RESULT = list + ", " + e; :}
                         |   expr:e                                                          {: RESULT = e; :}
 ;
-expr                    ::= STRING_LITERAL:s	                                            {: RESULT = "\"" + s + "\"";:}
+expr                    ::= expr:e1 PLUS expr:e2                                            {: RESULT = e1 + "+" + e2; :}
+                        | STRING_LITERAL:s	                                            {: RESULT = "\"" + s + "\"";:}
 ;
