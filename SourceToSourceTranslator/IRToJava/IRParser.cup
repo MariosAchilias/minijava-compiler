@@ -57,7 +57,7 @@ declaration             ::= decl_func:decl expr:e RBRACK                        
 ;
 decl_func               ::= ID:name LPAREN decl_arg_list:arguments ID:last_arg RPARENLBRACK                  {: RESULT = name + "(" + arguments + ", String "+ last_arg + ")"; :}
                         |   ID:name LPAREN RPARENLBRACK                                          {: RESULT = name +"()"; :}
-                        |   ID:name LPAREN ID:arg RPARENLBRACK                                          {: RESULT = name+"("+arg+")"; :}
+                        |   ID:name LPAREN ID:arg RPARENLBRACK                                          {: RESULT = name+"(String "+arg+")"; :}
 
 ;
 decl_arg_list           ::= decl_arg_list:list ID:id COMMA                                  {: RESULT = list + ", String " + id; :}
@@ -72,9 +72,9 @@ func_call               ::= ID:func LPAREN call_arg_list:arguments RPAREN       
 call_arg_list           ::= call_arg_list:list COMMA expr:e                                 {: RESULT = list + ", " + e; :}
                         |   expr:e                                                          {: RESULT = e; :}
 ;
-if_else                 ::= IF LPAREN condition:cond RPAREN expr:e1 ELSE expr:e2               {: RESULT = "(("+cond+") ? "+e1+" : "+e2+"))"; :}
+if_else                 ::= IF LPAREN condition:cond RPAREN expr:e1 ELSE expr:e2               {: RESULT = "(("+cond+") ? "+e1+" : "+e2+")"; :}
 ;
-condition               ::= expr:e1 PREFIX expr:e2                                          {: RESULT = e1+".startsWith("+e2+")"; :}
+condition               ::= expr:e1 PREFIX expr:e2                                          {: RESULT = e2+".startsWith("+e1+")"; :}
 ;
 expr                    ::= expr:e1 PLUS expr:e2                                            {: RESULT = e1 + "+" + e2; :}
                         | STRING_LITERAL:s	                                            {: RESULT = "\"" + s + "\"";:}
