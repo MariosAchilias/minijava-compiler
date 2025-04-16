@@ -37,9 +37,9 @@ precedence left PLUS;
  *  The Grammar Rules
  */
 
-program                 ::= function_declarations:declarations top_level_statements:statements  {: System.out.println(statements); System.out.println(declarations); :}
-                        | function_declarations:declarations                                    {: System.out.println(declarations); :}
-                        | top_level_statements:statements                                       {: System.out.println(statements); :}
+program                 ::= function_declarations:declarations top_level_statements:statements  {: System.out.println(statements); System.out.println(declarations); System.out.println("}"); :}
+                        | function_declarations:declarations                                    {: System.out.println(declarations); System.out.println("}"); :}
+                        | top_level_statements:statements                                       {: System.out.println(statements); System.out.println("}"); :}
 ;
 function_declarations   ::= function_declarations:list declaration:d                            {: RESULT = list + d;:}
                         |  declaration:d                                                        {: RESULT = d; :}
@@ -55,11 +55,8 @@ decl_arg_list           ::= decl_arg_list:list COMMA ID:id                      
 ;
 top_level_statements    ::= statement_list:s                                                {:System.out.println("public class Translated {\n\t public static void main(String[] args) {\n" + s + "\t}\n"); :}
 ;
-statement_list          ::= statement_list:list statement:s                                 {: RESULT = list + "\t\tSystem.out.println(" + s + ");\n"; :}
-                        | statement:s                                                         {: RESULT = "\t\tSystem.out.println(" + s + ");\n"; :}
-;
-statement               ::= expr:e                                                          {: RESULT = e; :}
-                        | func_call:call                                                    {: RESULT = call; :}
+statement_list          ::= statement_list:list expr:e                                 {: RESULT = list + "\t\tSystem.out.println(" + e + ");\n"; :}
+                        | expr:e                                                         {: RESULT = "\t\tSystem.out.println(" + e + ");\n"; :}
 ;
 func_call               ::= ID:func LPAREN call_arg_list:arguments RPAREN                        {: RESULT = func + "(" + arguments + ")"; :}
                         | ID LPAREN RPAREN                                                       {::}
@@ -69,4 +66,5 @@ call_arg_list           ::= call_arg_list:list COMMA expr:e                     
 ;
 expr                    ::= expr:e1 PLUS expr:e2                                            {: RESULT = e1 + "+" + e2; :}
                         | STRING_LITERAL:s	                                            {: RESULT = "\"" + s + "\"";:}
+                        | func_call:call                                                    {: RESULT = call; :}
 ;
