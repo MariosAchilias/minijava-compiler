@@ -22,11 +22,11 @@ scan with {: return s.next_token(); :};
  */
 
 /* Terminals (tokens returned by the scanner). */
-terminal            EQUALS, PLUS, IF, ELSE, OP, REV, LPAREN, RPAREN, LBRACK, RBRACK, RPARENLBRACK, COMMA, ID;
+terminal            EQUALS, PLUS, IF, ELSE, REV, LPAREN, RPAREN, LBRACK, RBRACK, RPARENLBRACK, COMMA, ID, PREFIX, SUFFIX;
 terminal String     STRING_LITERAL;
 
 /*  Non terminals */
-non terminal           func_decl, if_else, statement_list, program, decl_func, function_declarations, top_level_statements, decl_arg_list, call_arg_list, statement, func_call, expr;
+non terminal           func_decl, if_else, statement_list, program, decl_func, function_declarations, top_level_statements, decl_arg_list, call_arg_list, statement, func_call, expr, condition;
 non terminal String    declaration;
 /**
  *  Precedence Declarations
@@ -64,7 +64,12 @@ func_call               ::= ID:func LPAREN call_arg_list:arguments RPAREN       
 call_arg_list           ::= call_arg_list:list COMMA expr:e                                 {: RESULT = list + ", " + e; :}
                         |   expr:e                                                          {: RESULT = e; :}
 ;
+if_else                 ::= IF LPAREN condition:cond RPAREN expr:e1 ELSE expr:e2               {: RESULT = "(("+cond+") ? "+e1+" : "+e2+"))"; :}
+;
+condition               ::= expr:e1 PREFIX expr:e2                                          {: RESULT = e1+".startsWith("+e2+")"; :}
+;
 expr                    ::= expr:e1 PLUS expr:e2                                            {: RESULT = e1 + "+" + e2; :}
                         | STRING_LITERAL:s	                                            {: RESULT = "\"" + s + "\"";:}
                         | func_call:call                                                    {: RESULT = call; :}
+                        | if_else:ternary                                                   {: RESULT = ternary; :}
 ;
