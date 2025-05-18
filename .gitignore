@@ -12,8 +12,22 @@
 
 Lexer.java
 Parser.java
-/java-cup-11b.jar
-/java-cup-11b-runtime.jar
+
+/SourceToSourceTranslator/java-cup-11b.jar
+/SourceToSourceTranslator/java-cup-11b-runtime.jar
 /SourceToSourceTranslator/jflex.bat
 /SourceToSourceTranslator/IRToJava/sym.java
 /SourceToSourceTranslator/SourceToIR/sym.java
+/MiniJavaSemanticAnalyzer/javacc5.jar
+/MiniJavaSemanticAnalyzer/jtb132di.jar
+/MiniJavaSemanticAnalyzer/syntaxtree/*
+/MiniJavaSemanticAnalyzer/visitor/*
+
+/MiniJavaSemanticAnalyzer/JavaCharStream.java
+/MiniJavaSemanticAnalyzer/minijava-jtb.jj
+/MiniJavaSemanticAnalyzer/MiniJavaParser.java
+/MiniJavaSemanticAnalyzer/MiniJavaParserConstants.java
+/MiniJavaSemanticAnalyzer/MiniJavaParserTokenManager.java
+/MiniJavaSemanticAnalyzer/ParseException.java
+/MiniJavaSemanticAnalyzer/Token.java
+/MiniJavaSemanticAnalyzer/TokenMgrError.java
