@@ -1,17 +1,16 @@
 import syntaxtree.*;
-import visitor.*;
 import java.io.*;
 
 class Main {
-    public static void main (String [] args){
+    public static void main (String [] args) throws Exception{
         FileInputStream fis = null;
         try{
             fis = new FileInputStream(args[0]);
             MiniJavaParser parser = new MiniJavaParser(fis);
+            Goal root = parser.Goal();
             System.err.println("Program parsed successfully.");
             SemanticAnalysisVisitor eval = new SemanticAnalysisVisitor();
-            Goal root = parser.Goal();
-            System.out.println(root.accept(eval, null));
+            root.accept(eval, null);
         }
         catch(ParseException ex){
             System.out.println(ex.getMessage());
