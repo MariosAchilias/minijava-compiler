@@ -1,11 +1,19 @@
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
-public class SymbolTable {
+public final class SymbolTable {
+    private static SymbolTable instance;
     private Scope current;
 
-    public SymbolTable() {
+    private SymbolTable() {
         current = new Scope(null);
+    }
+
+    public static SymbolTable getInstance() {
+        if (instance == null) {
+            instance = new SymbolTable();
+        }
+        return instance;
     }
 
     public void enterScope() {

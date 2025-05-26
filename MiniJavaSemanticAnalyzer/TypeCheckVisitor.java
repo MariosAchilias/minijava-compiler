@@ -3,7 +3,6 @@ import visitor.*;
 
 class TypeCheckVisitor extends GJDepthFirst<String, Void>{
 
-    SymbolTable symbolTable;
     /**
      * f0 -> "class"
      * f1 -> Identifier()
