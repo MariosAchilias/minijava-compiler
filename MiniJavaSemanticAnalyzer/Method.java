@@ -6,4 +6,11 @@ public class Method extends Symbol{
         this.returnType = returnType;
         this.parameters = parameters;
     }
+    public void prettyPrint() {
+        System.out.print(returnType.toString() + " " + id + " (");
+        for (Variable param: parameters) {
+            System.out.print(param.type.toString() + ", ");
+        }
+        System.out.println(")");
+    }
 }

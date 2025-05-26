@@ -9,11 +9,26 @@ public class Class extends Symbol {
     }
 
     public boolean addField(Variable field) {
-        return true;
+        return fields.put(field.id, field) == null;
     }
 
     public boolean addMethod(Method method) {
-        return true;
+        return methods.put(method.id, method) == null;
+    }
+
+    public void prettyPrint() {
+        System.out.println("Class: " + id);
+        System.out.println("Methods: ");
+        for (Method m : methods.values()) {
+            m.prettyPrint();
+        }
+        for (Variable f : fields.values()) {
+            f.prettyPrint();
+        }
+    }
+
+    public void printOffsets() {
+        // TODO
     }
 
 }

@@ -1,8 +1,8 @@
 import java.util.HashMap;
 
 public class Scope {
-    private Scope parent;
-    private HashMap<String, Symbol> map;
+    public Scope parent;
+    public HashMap<String, Symbol> map;
     public Scope(Scope parentScope) {
         parent = parentScope;
     }
