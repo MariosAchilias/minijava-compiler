@@ -9,8 +9,12 @@ class Main {
             MiniJavaParser parser = new MiniJavaParser(fis);
             Goal root = parser.Goal();
             System.err.println("Program parsed successfully.");
-            SemanticAnalysisVisitor eval = new SemanticAnalysisVisitor();
-            root.accept(eval, null);
+
+            SymbolTableBuildVisitor populateSymbolTable = new SymbolTableBuildVisitor();
+            root.accept(populateSymbolTable, null);
+
+            // TypeCheckVisitor typeCheck = new TypeCheckVisitor(populateSymbolTable.symbolTable);
+            // root.accept(populateSymbolTable, null);
         }
         catch(ParseException ex){
             System.out.println(ex.getMessage());

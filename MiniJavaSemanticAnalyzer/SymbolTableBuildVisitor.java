@@ -1,7 +1,9 @@
 import syntaxtree.*;
 import visitor.*;
 
-class SemanticAnalysisVisitor extends GJDepthFirst<String, Void>{
+class SymbolTableBuildVisitor extends GJDepthFirst<String, Void>{
+
+    SymbolTable symbolTable;
     /**
      * f0 -> "class"
      * f1 -> Identifier()
