@@ -13,17 +13,28 @@ public class SymbolTable {
     }
 
     public void exitScope() {
-        current = current.parent;
+        current = current.getParent();
+    }
+
+    public Symbol get_symbol(String id, Symbol symbol) {
+        for (Scope s = current; s != null; s = s.getParent()) {
+            if (s.has_symbol(id)) {
+                return s.get_symbol(id);
+            }
+        }
+        return null;
+    }
+
+    public boolean add_symbol(String id, Symbol symbol) {
+        return current.add_symbol(id, symbol);
     }
 
     public void prettyPrint() {
-        // Only top-level scope (which contains classes) is intended for printing
-        if (current.parent != null)
-            return;
-
-        for (Symbol s: current.map.values()) {
-            s.prettyPrint();
+        Scope topScope = current;
+        while (topScope.getParent() != null) {
+            topScope = topScope.getParent();
         }
+        topScope.prettyPrint();
     }
 
 }

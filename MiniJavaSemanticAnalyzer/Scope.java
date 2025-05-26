@@ -1,16 +1,32 @@
 import java.util.HashMap;
 
 public class Scope {
-    public Scope parent;
-    public HashMap<String, Symbol> map;
+    private Scope parent;
+    private HashMap<String, Symbol> map;
+
     public Scope(Scope parentScope) {
         parent = parentScope;
     }
-    public Symbol get_symbol(String s) {
-        // check all scopes up hierarchy
-        return null;
-    }
-    public void add_symbol(String id, Symbol symbol) {
 
+    public Scope getParent() {
+        return parent;
+    }
+
+    public boolean has_symbol(String id) {
+        return map.containsKey(id);
+    }
+
+    public Symbol get_symbol(String id) {
+        return map.get(id);
+    }
+
+    public boolean add_symbol(String id, Symbol symbol) {
+        return map.put(id, symbol) == null;
+    }
+
+    public void prettyPrint() {
+        for (Symbol s: map.values()) {
+            s.prettyPrint();
+        }
     }
 }
