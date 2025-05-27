@@ -1,15 +1,17 @@
+import java.util.ArrayList;
+
 public class Method extends Symbol{
     public VarType returnType;
-    public Variable[] parameters;
-    public Method(VarType returnType, String methodName, Variable[] parameters) {
+    public ArrayList<Variable> parameters;
+    public Method(VarType returnType, String methodName, ArrayList<Variable> parameters) {
         super(SymbolType.METHOD, methodName);
         this.returnType = returnType;
-        this.parameters = parameters;
+        this.parameters = parameters == null ? new ArrayList<Variable>() : parameters;
     }
     public void prettyPrint() {
         System.out.print(returnType.toString() + " " + id + " (");
         for (Variable param: parameters) {
-            System.out.print(param.type.toString() + ", ");
+            System.out.print(param.varType.toString() + ", ");
         }
         System.out.println(")");
     }
