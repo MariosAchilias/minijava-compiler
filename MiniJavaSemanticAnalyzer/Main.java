@@ -17,7 +17,7 @@ class Main {
                 SymbolTable symbolTable = SymbolTable.getInstance();
                 symbolTable.printOffsets();
                 TypeCheckVisitor typeCheck = new TypeCheckVisitor();
-                root.accept(populateSymbolTable, null);
+                root.accept(typeCheck, null);
 
             }
             catch(ParseException ex){
