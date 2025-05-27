@@ -1,6 +1,3 @@
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-
 public final class SymbolTable {
     private static SymbolTable instance;
     private Scope current;
@@ -24,7 +21,7 @@ public final class SymbolTable {
         current = current.getParent();
     }
 
-    public Symbol getSymbol(String id, Symbol symbol) {
+    public Symbol getSymbol(String id) {
         for (Scope s = current; s != null; s = s.getParent()) {
             if (s.hasSymbol(id)) {
                 return s.getSymbol(id);
@@ -43,6 +40,14 @@ public final class SymbolTable {
             topScope = topScope.getParent();
         }
         topScope.prettyPrint();
+    }
+
+    public void printOffsets() {
+        Scope topScope = current;
+        while (topScope.getParent() != null) {
+            topScope = topScope.getParent();
+        }
+        topScope.printOffsets();
     }
 
 }

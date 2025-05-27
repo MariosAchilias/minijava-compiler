@@ -30,4 +30,11 @@ public class Scope {
             s.prettyPrint();
         }
     }
+
+    public void printOffsets() {
+        for (Symbol s: map.values()) {
+            if (s.type == SymbolType.CLASS)
+                ((Class) s).printOffsets();
+        }
+    }
 }

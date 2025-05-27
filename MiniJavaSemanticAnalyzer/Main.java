@@ -13,6 +13,9 @@ class Main {
             SymbolTableBuildVisitor populateSymbolTable = new SymbolTableBuildVisitor();
             root.accept(populateSymbolTable, null);
 
+            SymbolTable symbolTable = SymbolTable.getInstance();
+            symbolTable.printOffsets();
+//            symbolTable.prettyPrint();
             // TypeCheckVisitor typeCheck = new TypeCheckVisitor(populateSymbolTable.symbolTable);
             // root.accept(populateSymbolTable, null);
         }
