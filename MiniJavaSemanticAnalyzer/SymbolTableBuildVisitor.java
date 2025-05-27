@@ -52,9 +52,9 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
 
         String className = n.f1.accept(this, null);
 
-        Class classSymbol = new Class(className, null);
+        Class classSymbol = new Class(className, null, symbolTable.getCurrScope());
         symbolTable.addSymbol(className, classSymbol);
-        symbolTable.enterScope();
+        symbolTable.enterScope(classSymbol.getScope());
 
         n.f2.accept(this, null);
         n.f3.accept(this, classSymbol);
@@ -87,14 +87,11 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
         Class superClass = (Class) symbolTable.getSymbol(superClassName);
         System.out.println("Class: " + className + ", superClass: " + superClassName);
 
-        Class classSymbol = new Class(className, superClass);
-
-        n.f2.accept(this, null);
-        n.f4.accept(this, null);
+        Class classSymbol = new Class(className, superClass, superClass.getScope());
 
         symbolTable.addSymbol(className, classSymbol);
 
-        symbolTable.enterScope();
+        symbolTable.enterScope(classSymbol.getScope());
 
         n.f5.accept(this, classSymbol);
         n.f6.accept(this, classSymbol);
@@ -143,21 +140,23 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
     @Override
     public String visit(MethodDeclaration n, Symbol argu) throws Exception {
 //        String argumentList = n.f4.present() ? n.f4.accept(this, null) : "";
-        symbolTable.enterScope();
-
-        VarType retType = VarType.getType(n.f1.accept(this, null));
-        String name = n.f2.accept(this, null);
-
-        Method method = new Method(retType, name, null);
-        // FormalParameterList visitor should create and set array
-        if (n.f4.present())
-            n.f4.accept(this, method);
 
         assert(argu != null && argu.type == SymbolType.CLASS);
         Class class_ = (Class) argu;
 
+        VarType retType = VarType.getType(n.f1.accept(this, null));
+        String name = n.f2.accept(this, null);
+
+        Method method = new Method(retType, name, null, class_.getScope());
+        // FormalParameterList visitor should create and set array
+        if (n.f4.present())
+            n.f4.accept(this, method);
+
+
         class_.addMethod(method);
         symbolTable.addSymbol(name, method);
+
+        symbolTable.enterScope(method.getLocalScope());
 
         n.f7.accept(this, null);
 

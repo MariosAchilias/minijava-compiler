@@ -3,10 +3,16 @@ import java.util.ArrayList;
 public class Method extends Symbol{
     public VarType returnType;
     public ArrayList<Variable> parameters;
-    public Method(VarType returnType, String methodName, ArrayList<Variable> parameters) {
+    private Scope localVars;
+    public Method(VarType returnType, String methodName, ArrayList<Variable> parameters, Scope classScope) {
         super(SymbolType.METHOD, methodName);
         this.returnType = returnType;
         this.parameters = parameters == null ? new ArrayList<Variable>() : parameters;
+        localVars = new Scope(classScope);
+    }
+
+    public Scope getLocalScope() {
+        return localVars;
     }
 
     public static boolean compatibleSignatures(Method method, Method method_) {

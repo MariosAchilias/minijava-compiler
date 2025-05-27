@@ -13,12 +13,20 @@ public final class SymbolTable {
         return instance;
     }
 
-    public void enterScope() {
-        current = new Scope(current);
+    public Scope newScope() {
+        return new Scope(current);
+    }
+
+    public void enterScope(Scope scope) {
+        current = scope;
     }
 
     public void exitScope() {
         current = current.getParent();
+    }
+
+    public Scope getCurrScope() {
+        return current;
     }
 
     public Symbol getSymbol(String id) {

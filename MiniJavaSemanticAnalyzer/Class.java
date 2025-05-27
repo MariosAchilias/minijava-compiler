@@ -4,12 +4,18 @@ public class Class extends Symbol {
     private LinkedHashMap<String, Method> methods;
     private LinkedHashMap<String, Variable> fields;
     private Class superClass;
+    private Scope scope;
 
-    public Class (String className, Class superClass) {
+    public Class (String className, Class superClass, Scope parentScope) {
         super(SymbolType.CLASS, className);
         methods = new LinkedHashMap<String, Method>();
         fields = new LinkedHashMap<String, Variable>();
+        this.scope = new Scope(parentScope);
         this.superClass = superClass;
+    }
+
+    public Scope getScope() {
+        return scope;
     }
 
     public Class getParent() {return superClass;}
