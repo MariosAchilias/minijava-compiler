@@ -30,6 +30,10 @@ public final class SymbolTable {
         return null;
     }
 
+    public Symbol getLocal(String id) {
+        return current.getSymbol(id);
+    }
+
     public boolean addSymbol(String id, Symbol symbol) {
         return current.addSymbol(id, symbol);
     }

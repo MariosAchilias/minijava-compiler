@@ -48,19 +48,20 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
      */
     @Override
     public String visit(ClassDeclaration n, Symbol argu) throws Exception {
-        System.out.println("calld class declaration");
         n.f0.accept(this, null);
 
         String className = n.f1.accept(this, null);
 
-        Class classSymbol = new Class(className);
+        Class classSymbol = new Class(className, null);
+        symbolTable.addSymbol(className, classSymbol);
+        symbolTable.enterScope();
 
         n.f2.accept(this, null);
         n.f3.accept(this, classSymbol);
         n.f4.accept(this, classSymbol);
         n.f5.accept(this, null);
 
-        symbolTable.addSymbol(className, classSymbol);
+        symbolTable.exitScope();
 
         return null;
     }
@@ -77,22 +78,28 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
      */
     @Override
     public String visit(ClassExtendsDeclaration n, Symbol argu) throws Exception {
-        n.f0.accept(this, argu);
+        n.f0.accept(this, null);
 
-        String classname = n.f1.accept(this, null);
-        System.out.println("Class: " + classname);
+        String className = n.f1.accept(this, null);
+        String superClassName = n.f2.accept(this, null);
 
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        System.out.println("Fields: ");
-        n.f5.accept(this, argu);
-        System.out.println("Methods: ");
-        n.f6.accept(this, argu);
-        n.f7.accept(this, argu);
+        // check error TODO
+        Class superClass = (Class) symbolTable.getSymbol(superClassName);
 
-        System.out.println();
+        Class classSymbol = new Class(className, superClass);
 
+        n.f2.accept(this, null);
+        n.f3.accept(this, null);
+        n.f4.accept(this, null);
+
+        symbolTable.addSymbol(className, classSymbol);
+
+        symbolTable.enterScope();
+
+        n.f5.accept(this, classSymbol);
+        n.f6.accept(this, classSymbol);
+
+        symbolTable.exitScope();
         return null;
     }
 
@@ -104,9 +111,13 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
     public String visit(VarDeclaration n, Symbol argu) throws Exception {
         VarType type = VarType.getType(n.f0.accept(this, argu));
         String name = n.f1.accept(this, argu);
+
+        if (symbolTable.getLocal(name) != null)
+            throw new SemanticException("Double definition of variable " + name);
+
         Variable var = new Variable(type, name);
         symbolTable.addSymbol(name, var);
-        if (argu.type == SymbolType.CLASS) {
+        if (argu != null && argu.type == SymbolType.CLASS) {
             Class class_ = (Class) argu;
             class_.addField(var);
         }
@@ -132,6 +143,8 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
     @Override
     public String visit(MethodDeclaration n, Symbol argu) throws Exception {
 //        String argumentList = n.f4.present() ? n.f4.accept(this, null) : "";
+        symbolTable.enterScope();
+
         VarType retType = VarType.getType(n.f1.accept(this, null));
         String name = n.f2.accept(this, null);
 
@@ -142,8 +155,13 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
 
         assert(argu != null && argu.type == SymbolType.CLASS);
         Class class_ = (Class) argu;
+
         class_.addMethod(method);
-        // TODO statement local vars scope etc
+        symbolTable.addSymbol(name, method);
+
+        n.f7.accept(this, null);
+
+        symbolTable.exitScope();
 
 //        super.visit(n, argu);
         return null;
@@ -191,17 +209,20 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
      * f1 -> Identifier()
      */
     @Override
-    public String visit(FormalParameter n, Symbol argu) throws Exception{
+    public String visit(FormalParameter n, Symbol argu) throws Exception {
         assert(argu.type != null && argu.type == SymbolType.METHOD);
 
         VarType type = VarType.getType(n.f0.accept(this, null));
         String name = n.f1.accept(this, null);
 
         Method method = (Method) argu;
-        method.parameters.add(new Variable(type, name));
+        Variable param = new Variable(type, name);
+        method.parameters.add(param);
+        symbolTable.addSymbol(name, param);
 
         return type + " " + name;
     }
+
 
     @Override
     public String visit(ArrayType n, Symbol argu) {

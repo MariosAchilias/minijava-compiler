@@ -8,7 +8,8 @@ public enum VarType {
     public static VarType getType(String type) throws Exception {
         switch (type) {
             case "int": return INTEGER;
+            case "boolean": return BOOLEAN;
+            default: return CLASS_INSTANCE;
         }
-        throw new IllegalArgumentException("Unknown variable type: " + type);
     }
 }
