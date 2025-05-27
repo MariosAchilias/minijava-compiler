@@ -31,10 +31,9 @@ public class Class extends Symbol {
         }
     }
 
-    private int printOffsets_aux(int start) {
-        int offset = 0;
+    private int getFieldsOffset() {
+        int offset = superClass == null ? 0 : superClass.getFieldsOffset();
         for (Variable f : fields.values()) {
-            System.out.println(id + "." + f.id + " : " + (start + offset));
             switch (f.varType) {
                 case INTEGER:
                     offset += 4;
@@ -46,16 +45,37 @@ public class Class extends Symbol {
                     offset += 8;
             }
         }
+        return offset;
+    }
+
+    private int getMethodsOffset() {
+        int offset = superClass == null ? 0 : superClass.getMethodsOffset();
         for (Method m: methods.values()) {
-            System.out.println(id + "." + m.id + " : " + (start + offset));
             offset += 8;
         }
-        return start + offset;
+        return offset;
     }
 
     public void printOffsets() {
-        int superEnd = superClass == null ? 0 : superClass.printOffsets_aux(0);
-        printOffsets_aux(superEnd);
+        int offset = superClass == null ? 0 : superClass.getFieldsOffset();
+        for (Variable f : fields.values()) {
+            System.out.println(id + "." + f.id + " : " + offset);
+            switch (f.varType) {
+                case INTEGER:
+                    offset += 4;
+                    break;
+                case BOOLEAN:
+                    offset += 1;
+                    break;
+                default:
+                    offset += 8;
+            }
+        }
+        offset = superClass == null ? 0 : superClass.getMethodsOffset();
+        for (Method m : methods.values()) {
+            System.out.println(id + "." + m.id + " : " + offset);
+            offset += 8;
+        }
     }
 
 }
