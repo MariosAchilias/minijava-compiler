@@ -6,6 +6,8 @@ public class Class extends Symbol {
 
     public Class (String className) {
         super(SymbolType.CLASS, className);
+        methods = new HashMap<String, Method>();
+        fields = new HashMap<String, Variable>();
     }
 
     public boolean addField(Variable field) {
@@ -18,12 +20,13 @@ public class Class extends Symbol {
 
     public void prettyPrint() {
         System.out.println("Class: " + id);
+        System.out.println("Fields: ");
+        for (Variable f : fields.values()) {
+            f.prettyPrint();
+        }
         System.out.println("Methods: ");
         for (Method m : methods.values()) {
             m.prettyPrint();
-        }
-        for (Variable f : fields.values()) {
-            f.prettyPrint();
         }
     }
 

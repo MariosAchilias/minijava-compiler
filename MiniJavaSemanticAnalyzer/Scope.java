@@ -5,6 +5,7 @@ public class Scope {
     private HashMap<String, Symbol> map;
 
     public Scope(Scope parentScope) {
+        map = new HashMap<String, Symbol>();
         parent = parentScope;
     }
 
@@ -12,15 +13,15 @@ public class Scope {
         return parent;
     }
 
-    public boolean has_symbol(String id) {
+    public boolean hasSymbol(String id) {
         return map.containsKey(id);
     }
 
-    public Symbol get_symbol(String id) {
+    public Symbol getSymbol(String id) {
         return map.get(id);
     }
 
-    public boolean add_symbol(String id, Symbol symbol) {
+    public boolean addSymbol(String id, Symbol symbol) {
         return map.put(id, symbol) == null;
     }
 

@@ -24,17 +24,17 @@ public final class SymbolTable {
         current = current.getParent();
     }
 
-    public Symbol get_symbol(String id, Symbol symbol) {
+    public Symbol getSymbol(String id, Symbol symbol) {
         for (Scope s = current; s != null; s = s.getParent()) {
-            if (s.has_symbol(id)) {
-                return s.get_symbol(id);
+            if (s.hasSymbol(id)) {
+                return s.getSymbol(id);
             }
         }
         return null;
     }
 
-    public boolean add_symbol(String id, Symbol symbol) {
-        return current.add_symbol(id, symbol);
+    public boolean addSymbol(String id, Symbol symbol) {
+        return current.addSymbol(id, symbol);
     }
 
     public void prettyPrint() {
