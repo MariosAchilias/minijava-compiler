@@ -81,15 +81,15 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
         n.f0.accept(this, null);
 
         String className = n.f1.accept(this, null);
-        String superClassName = n.f2.accept(this, null);
+        String superClassName = n.f3.accept(this, null);
 
         // check error TODO
         Class superClass = (Class) symbolTable.getSymbol(superClassName);
+        System.out.println("Class: " + className + ", superClass: " + superClassName);
 
         Class classSymbol = new Class(className, superClass);
 
         n.f2.accept(this, null);
-        n.f3.accept(this, null);
         n.f4.accept(this, null);
 
         symbolTable.addSymbol(className, classSymbol);

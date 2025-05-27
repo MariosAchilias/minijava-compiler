@@ -9,6 +9,7 @@ public class Class extends Symbol {
         super(SymbolType.CLASS, className);
         methods = new LinkedHashMap<String, Method>();
         fields = new LinkedHashMap<String, Variable>();
+        this.superClass = superClass;
     }
 
     public boolean addField(Variable field) {
