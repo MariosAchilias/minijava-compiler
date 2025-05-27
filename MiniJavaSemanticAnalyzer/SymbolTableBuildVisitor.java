@@ -163,6 +163,14 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
 
         symbolTable.exitScope();
 
+        // If method exists in parent class, it must be a valid override (i.e. have same return & argument types)
+        if (class_.getParent() == null || class_.getParent().getMethod(name) == null)
+            return null;
+
+        Method overriden = class_.getParent().getMethod(name);
+        if (!Method.compatibleSignatures(method, overriden))
+            throw new SemanticException("Method override has incompatible return type and/or argument types");
+
 //        super.visit(n, argu);
         return null;
     }

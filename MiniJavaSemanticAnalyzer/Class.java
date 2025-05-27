@@ -12,13 +12,19 @@ public class Class extends Symbol {
         this.superClass = superClass;
     }
 
+    public Class getParent() {return superClass;}
+
     public boolean addField(Variable field) {
         return fields.put(field.id, field) == null;
     }
 
+    public Variable getField(String id) {return fields.get(id);}
+
     public boolean addMethod(Method method) {
         return methods.put(method.id, method) == null;
     }
+
+    public Method getMethod(String id) {return methods.get(id);}
 
     public void prettyPrint() {
         System.out.println("Class: " + id);
