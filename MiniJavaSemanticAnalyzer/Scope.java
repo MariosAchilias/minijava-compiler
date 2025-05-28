@@ -1,11 +1,11 @@
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class Scope {
     private Scope parent;
-    private HashMap<String, Symbol> map;
+    private LinkedHashMap<String, Symbol> map;
 
     public Scope(Scope parentScope) {
-        map = new HashMap<String, Symbol>();
+        map = new LinkedHashMap<String, Symbol>();
         parent = parentScope;
     }
 
