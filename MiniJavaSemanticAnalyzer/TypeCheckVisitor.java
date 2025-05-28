@@ -1,7 +1,7 @@
 import syntaxtree.*;
 import visitor.*;
 
-class TypeCheckVisitor extends GJDepthFirst<String, Symbol>{
+class TypeCheckVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
     public TypeCheckVisitor() {
         symbolTable = SymbolTable.getInstance();
@@ -18,7 +18,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, Symbol>{
      * f5 -> "}"
      */
     @Override
-    public String visit(ClassDeclaration n, Symbol argu) throws Exception {
+    public String visit(ClassDeclaration n, String argu) throws Exception {
         String className = n.f1.accept(this, null);
         Class classSymbol = (Class) symbolTable.getSymbol(className);
 
@@ -40,7 +40,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, Symbol>{
      * f7 -> "}"
      */
     @Override
-    public String visit(ClassExtendsDeclaration n, Symbol argu) throws Exception {
+    public String visit(ClassExtendsDeclaration n, String argu) throws Exception {
         String className = n.f1.accept(this, null);
         Class classSymbol = (Class) symbolTable.getSymbol(className);
 
@@ -67,10 +67,9 @@ class TypeCheckVisitor extends GJDepthFirst<String, Symbol>{
      * f12 -> "}"
      */
     @Override
-    public String visit(MethodDeclaration n, Symbol argu) throws Exception {
-        String argumentList = n.f4.present() ? n.f4.accept(this, null) : "";
+    public String visit(MethodDeclaration n, String argu) throws Exception {
 
-        VarType returnType = VarType.getType(n.f1.accept(this, null));
+        String returnType = n.f1.accept(this, null);
         String methodName = n.f2.accept(this, null);
         Method method = (Method) symbolTable.getSymbol(methodName);
 
@@ -78,56 +77,10 @@ class TypeCheckVisitor extends GJDepthFirst<String, Symbol>{
         n.f8.accept(this, null);
         symbolTable.exitScope();
 
+        // TODO check that return expression type matches method return type
+
 //        super.visit(n, argu);
         return null;
-    }
-
-    /**
-     * f0 -> FormalParameter()
-     * f1 -> FormalParameterTail()
-     */
-    @Override
-    public String visit(FormalParameterList n, Symbol argu) throws Exception {
-        String ret = n.f0.accept(this, null);
-
-        if (n.f1 != null) {
-            ret += n.f1.accept(this, null);
-        }
-
-        return ret;
-    }
-
-    /**
-     * f0 -> FormalParameter()
-     * f1 -> FormalParameterTail()
-     */
-    public String visit(FormalParameterTerm n, Symbol argu) throws Exception {
-        return n.f1.accept(this, argu);
-    }
-
-    /**
-     * f0 -> ","
-     * f1 -> FormalParameter()
-     */
-    @Override
-    public String visit(FormalParameterTail n, Symbol argu) throws Exception {
-        String ret = "";
-        for ( Node node: n.f0.nodes) {
-            ret += ", " + node.accept(this, null);
-        }
-
-        return ret;
-    }
-
-    /**
-     * f0 -> Type()
-     * f1 -> Identifier()
-     */
-    @Override
-    public String visit(FormalParameter n, Symbol argu) throws Exception{
-        String type = n.f0.accept(this, null);
-        String name = n.f1.accept(this, null);
-        return type + " " + name;
     }
 
     /**
@@ -137,7 +90,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, Symbol>{
      * f3 -> ";"
      */
     @Override
-    public String visit(AssignmentStatement n, Symbol argu) throws Exception {
+    public String visit(AssignmentStatement n, String argu) throws Exception {
         String id = n.f0.accept(this, argu);
         if(symbolTable.getSymbol(id) == null)
             throw new SemanticException("Assignment to undefined variable " + id);
@@ -155,7 +108,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, Symbol>{
      * f5 -> ")"
      */
     @Override
-    public String visit(MessageSend n, Symbol argu) throws Exception {
+    public String visit(MessageSend n, String argu) throws Exception {
         String primaryExpression = n.f0.accept(this, null);
 
         String id = n.f2.accept(this, null);
@@ -175,7 +128,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, Symbol>{
      *       | BracketExpression()
      */
     @Override
-    public String visit(PrimaryExpression n, Symbol argu) throws Exception {
+    public String visit(PrimaryExpression n, String argu) throws Exception {
         n.f0.accept(this, argu);
         return null;
     }
@@ -188,7 +141,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, Symbol>{
      * f3 -> ")"
      */
     @Override
-    public String visit(AllocationExpression n, Symbol argu) throws Exception {
+    public String visit(AllocationExpression n, String argu) throws Exception {
         String id = n.f1.accept(this, null);
         Symbol classSymbol = symbolTable.getSymbol(id);
         if (classSymbol == null) {
@@ -198,20 +151,20 @@ class TypeCheckVisitor extends GJDepthFirst<String, Symbol>{
     }
 
     @Override
-    public String visit(ArrayType n, Symbol argu) {
+    public String visit(ArrayType n, String argu) {
         return "int[]";
     }
 
-    public String visit(BooleanType n, Symbol argu) {
+    public String visit(BooleanType n, String argu) {
         return "boolean";
     }
 
-    public String visit(IntegerType n, Symbol argu) {
+    public String visit(IntegerType n, String argu) {
         return "int";
     }
 
     @Override
-    public String visit(Identifier n, Symbol argu) {
+    public String visit(Identifier n, String argu) {
         return n.f0.toString();
     }
 }

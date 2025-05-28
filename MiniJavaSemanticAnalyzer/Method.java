@@ -1,10 +1,10 @@
 import java.util.ArrayList;
 
 public class Method extends Symbol{
-    public VarType returnType;
+    public String returnType;
     public ArrayList<Variable> parameters;
     private Scope localVars;
-    public Method(VarType returnType, String methodName, ArrayList<Variable> parameters, Scope classScope) {
+    public Method(String returnType, String methodName, ArrayList<Variable> parameters, Scope classScope) {
         super(SymbolType.METHOD, methodName);
         this.returnType = returnType;
         this.parameters = parameters == null ? new ArrayList<Variable>() : parameters;
@@ -16,7 +16,7 @@ public class Method extends Symbol{
     }
 
     public static boolean compatibleSignatures(Method method, Method method_) {
-        if (method.returnType != method_.returnType)
+        if (!method.returnType.equals(method_.returnType))
             return false;
         if (method.parameters.size() != method_.parameters.size())
             return false;
@@ -27,9 +27,9 @@ public class Method extends Symbol{
         return true;
     }
     public void prettyPrint() {
-        System.out.print(returnType.toString() + " " + id + " (");
+        System.out.print(returnType + " " + id + " (");
         for (Variable param: parameters) {
-            System.out.print(param.varType.toString() + ", ");
+            System.out.print(param.varType + ", ");
         }
         System.out.println(")");
     }

@@ -48,10 +48,10 @@ public class Class extends Symbol {
         int offset = superClass == null ? 0 : superClass.getFieldsOffset();
         for (Variable f : fields.values()) {
             switch (f.varType) {
-                case INTEGER:
+                case "int":
                     offset += 4;
                     break;
-                case BOOLEAN:
+                case "boolean":
                     offset += 1;
                     break;
                 default:
@@ -74,10 +74,10 @@ public class Class extends Symbol {
         for (Variable f : fields.values()) {
             System.out.println(id + "." + f.id + " : " + offset);
             switch (f.varType) {
-                case INTEGER:
+                case "int":
                     offset += 4;
                     break;
-                case BOOLEAN:
+                case "boolean":
                     offset += 1;
                     break;
                 default:

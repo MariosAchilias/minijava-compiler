@@ -107,7 +107,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
      * f2 -> ";"
      */
     public String visit(VarDeclaration n, Symbol argu) throws Exception {
-        VarType type = VarType.getType(n.f0.accept(this, argu));
+        String type = n.f0.accept(this, argu);
         String name = n.f1.accept(this, argu);
 
         if (symbolTable.getLocal(name) != null)
@@ -145,7 +145,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
         assert(argu != null && argu.type == SymbolType.CLASS);
         Class class_ = (Class) argu;
 
-        VarType retType = VarType.getType(n.f1.accept(this, null));
+        String retType = n.f1.accept(this, null);
         String name = n.f2.accept(this, null);
 
         Method method = new Method(retType, name, null, class_.getScope());
@@ -220,7 +220,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
     public String visit(FormalParameter n, Symbol argu) throws Exception {
         assert(argu.type != null && argu.type == SymbolType.METHOD);
 
-        VarType type = VarType.getType(n.f0.accept(this, null));
+        String type = n.f0.accept(this, null);
         String name = n.f1.accept(this, null);
 
         Method method = (Method) argu;
