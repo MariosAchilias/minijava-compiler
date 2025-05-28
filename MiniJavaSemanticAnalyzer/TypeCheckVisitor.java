@@ -1,39 +1,13 @@
 import syntaxtree.*;
 import visitor.*;
 
-class TypeCheckVisitor extends GJDepthFirst<String, Void>{
-
-    /**
-     * f0 -> "class"
-     * f1 -> Identifier()
-     * f2 -> "{"
-     * f3 -> "public"
-     * f4 -> "static"
-     * f5 -> "void"
-     * f6 -> "main"
-     * f7 -> "("
-     * f8 -> "String"
-     * f9 -> "["
-     * f10 -> "]"
-     * f11 -> Identifier()
-     * f12 -> ")"
-     * f13 -> "{"
-     * f14 -> ( VarDeclaration() )*
-     * f15 -> ( Statement() )*
-     * f16 -> "}"
-     * f17 -> "}"
-     */
-    @Override
-    public String visit(MainClass n, Void argu) throws Exception {
-        String classname = n.f1.accept(this, null);
-        System.out.println("Class: " + classname);
-
-        super.visit(n, argu);
-
-        System.out.println();
-
-        return null;
+class TypeCheckVisitor extends GJDepthFirst<String, Symbol>{
+    SymbolTable symbolTable;
+    public TypeCheckVisitor() {
+        symbolTable = SymbolTable.getInstance();
     }
+
+    // TODO main class
 
     /**
      * f0 -> "class"
@@ -44,20 +18,13 @@ class TypeCheckVisitor extends GJDepthFirst<String, Void>{
      * f5 -> "}"
      */
     @Override
-    public String visit(ClassDeclaration n, Void argu) throws Exception {
-        n.f0.accept(this, argu);
+    public String visit(ClassDeclaration n, Symbol argu) throws Exception {
+        String className = n.f1.accept(this, null);
+        Class classSymbol = (Class) symbolTable.getSymbol(className);
 
-        String classname = n.f1.accept(this, argu);
-        System.out.println("Class: " + classname);
-
-        n.f2.accept(this, argu);
-        System.out.println("Fields: ");
-        n.f3.accept(this, argu);
-        System.out.println("Methods: ");
-        n.f4.accept(this, argu);
-        n.f5.accept(this, argu);
-
-        System.out.println();
+        symbolTable.enterScope(classSymbol.getScope());
+        n.f4.accept(this, null);
+        symbolTable.enterGlobalScope();
 
         return null;
     }
@@ -73,39 +40,15 @@ class TypeCheckVisitor extends GJDepthFirst<String, Void>{
      * f7 -> "}"
      */
     @Override
-    public String visit(ClassExtendsDeclaration n, Void argu) throws Exception {
-        n.f0.accept(this, argu);
+    public String visit(ClassExtendsDeclaration n, Symbol argu) throws Exception {
+        String className = n.f1.accept(this, null);
+        Class classSymbol = (Class) symbolTable.getSymbol(className);
 
-        String classname = n.f1.accept(this, null);
-        System.out.println("Class: " + classname);
-
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        System.out.println("Fields: ");
-        n.f5.accept(this, argu);
-        System.out.println("Methods: ");
-        n.f6.accept(this, argu);
-        n.f7.accept(this, argu);
-
-        System.out.println();
+        symbolTable.enterScope(classSymbol.getScope());
+        n.f6.accept(this, null);
+        symbolTable.enterGlobalScope();
 
         return null;
-    }
-
-    /**
-     * f0 -> Type()
-     * f1 -> Identifier()
-     * f2 -> ";"
-     */
-    public String visit(VarDeclaration n, Void argu) throws Exception {
-        String _ret=null;
-        String type = n.f0.accept(this, argu);
-        String var = n.f1.accept(this, argu);
-        System.out.println(var + " " + type);
-        super.visit(n, argu);
-
-        return _ret;
     }
 
     /**
@@ -124,16 +67,18 @@ class TypeCheckVisitor extends GJDepthFirst<String, Void>{
      * f12 -> "}"
      */
     @Override
-    public String visit(MethodDeclaration n, Void argu) throws Exception {
+    public String visit(MethodDeclaration n, Symbol argu) throws Exception {
         String argumentList = n.f4.present() ? n.f4.accept(this, null) : "";
 
-        String myType = n.f1.accept(this, null);
-        String myName = n.f2.accept(this, null);
+        VarType returnType = VarType.getType(n.f1.accept(this, null));
+        String methodName = n.f2.accept(this, null);
+        Method method = (Method) symbolTable.getSymbol(methodName);
 
-        System.out.println("Method: " + myType + " " + myName + " (" + argumentList + ")");
-        System.out.println("Local vars:");
+        symbolTable.enterScope(method.getLocalScope());
+        n.f8.accept(this, null);
+        symbolTable.exitScope();
 
-        super.visit(n, argu);
+//        super.visit(n, argu);
         return null;
     }
 
@@ -142,7 +87,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, Void>{
      * f1 -> FormalParameterTail()
      */
     @Override
-    public String visit(FormalParameterList n, Void argu) throws Exception {
+    public String visit(FormalParameterList n, Symbol argu) throws Exception {
         String ret = n.f0.accept(this, null);
 
         if (n.f1 != null) {
@@ -156,7 +101,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, Void>{
      * f0 -> FormalParameter()
      * f1 -> FormalParameterTail()
      */
-    public String visit(FormalParameterTerm n, Void argu) throws Exception {
+    public String visit(FormalParameterTerm n, Symbol argu) throws Exception {
         return n.f1.accept(this, argu);
     }
 
@@ -165,7 +110,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, Void>{
      * f1 -> FormalParameter()
      */
     @Override
-    public String visit(FormalParameterTail n, Void argu) throws Exception {
+    public String visit(FormalParameterTail n, Symbol argu) throws Exception {
         String ret = "";
         for ( Node node: n.f0.nodes) {
             ret += ", " + node.accept(this, null);
@@ -179,27 +124,94 @@ class TypeCheckVisitor extends GJDepthFirst<String, Void>{
      * f1 -> Identifier()
      */
     @Override
-    public String visit(FormalParameter n, Void argu) throws Exception{
+    public String visit(FormalParameter n, Symbol argu) throws Exception{
         String type = n.f0.accept(this, null);
         String name = n.f1.accept(this, null);
         return type + " " + name;
     }
 
+    /**
+     * f0 -> Identifier()
+     * f1 -> "="
+     * f2 -> Expression()
+     * f3 -> ";"
+     */
     @Override
-    public String visit(ArrayType n, Void argu) {
+    public String visit(AssignmentStatement n, Symbol argu) throws Exception {
+        String id = n.f0.accept(this, argu);
+        if(symbolTable.getSymbol(id) == null)
+            throw new SemanticException("Assignment to undefined variable " + id);
+
+        // TODO check type of expression (two possible ways: return type from expression, or give expected type as argument to expression visitor)
+        n.f2.accept(this, argu);
+        return null;
+    }
+    /**
+     * f0 -> PrimaryExpression()
+     * f1 -> "."
+     * f2 -> Identifier()
+     * f3 -> "("
+     * f4 -> ( ExpressionList() )?
+     * f5 -> ")"
+     */
+    @Override
+    public String visit(MessageSend n, Symbol argu) throws Exception {
+        String primaryExpression = n.f0.accept(this, null);
+
+        String id = n.f2.accept(this, null);
+        n.f4.accept(this, argu);
+        return null;
+    }
+
+    /**
+     * Grammar production:
+     * f0 -> IntegerLiteral()
+     *       | TrueLiteral()
+     *       | FalseLiteral()
+     *       | Identifier()
+     *       | ThisExpression()
+     *       | ArrayAllocationExpression()
+     *       | AllocationExpression()
+     *       | BracketExpression()
+     */
+    @Override
+    public String visit(PrimaryExpression n, Symbol argu) throws Exception {
+        n.f0.accept(this, argu);
+        return null;
+    }
+
+
+    /**
+     * f0 -> "new"
+     * f1 -> Identifier()
+     * f2 -> "("
+     * f3 -> ")"
+     */
+    @Override
+    public String visit(AllocationExpression n, Symbol argu) throws Exception {
+        String id = n.f1.accept(this, null);
+        Symbol classSymbol = symbolTable.getSymbol(id);
+        if (classSymbol == null) {
+            throw new SemanticException("Instantiation of undefined class \'" + id + "\'");
+        }
+        return null;
+    }
+
+    @Override
+    public String visit(ArrayType n, Symbol argu) {
         return "int[]";
     }
 
-    public String visit(BooleanType n, Void argu) {
+    public String visit(BooleanType n, Symbol argu) {
         return "boolean";
     }
 
-    public String visit(IntegerType n, Void argu) {
+    public String visit(IntegerType n, Symbol argu) {
         return "int";
     }
 
     @Override
-    public String visit(Identifier n, Void argu) {
+    public String visit(Identifier n, Symbol argu) {
         return n.f0.toString();
     }
 }
