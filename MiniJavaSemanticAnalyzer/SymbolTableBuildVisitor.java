@@ -28,13 +28,15 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
      */
     @Override
     public String visit(MainClass n, Symbol argu) throws Exception {
+        // TODO
+        /*
         String classname = n.f1.accept(this, null);
         System.out.println("Class: " + classname);
 
         super.visit(n, argu);
 
         System.out.println();
-
+        */
         return null;
     }
 
@@ -83,9 +85,8 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
         String className = n.f1.accept(this, null);
         String superClassName = n.f3.accept(this, null);
 
-        // check error TODO
+        // check error (superclass not defined) TODO
         Class superClass = (Class) symbolTable.getSymbol(superClassName);
-        System.out.println("Class: " + className + ", superClass: " + superClassName);
 
         Class classSymbol = new Class(className, superClass, superClass.getScope());
 
@@ -96,7 +97,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
         n.f5.accept(this, classSymbol);
         n.f6.accept(this, classSymbol);
 
-        symbolTable.exitScope();
+        symbolTable.enterGlobalScope();
         return null;
     }
 

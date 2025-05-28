@@ -1,9 +1,11 @@
 public final class SymbolTable {
     private static SymbolTable instance;
+    private Scope globalScope;
     private Scope current;
 
     private SymbolTable() {
         current = new Scope(null);
+        globalScope = current;
     }
 
     public static SymbolTable getInstance() {
@@ -23,6 +25,10 @@ public final class SymbolTable {
 
     public void exitScope() {
         current = current.getParent();
+    }
+
+    public void enterGlobalScope() {
+        current = globalScope;
     }
 
     public Scope getCurrScope() {
