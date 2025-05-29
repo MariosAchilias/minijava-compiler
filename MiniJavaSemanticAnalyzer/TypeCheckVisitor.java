@@ -20,11 +20,11 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(ClassDeclaration n, String argu) throws Exception {
         String className = n.f1.accept(this, null);
-        Class classSymbol = (Class) symbolTable.getSymbol(className);
+        Class classSymbol = symbolTable.getClass(className);
 
         symbolTable.enterScope(classSymbol.getScope());
-        n.f4.accept(this, null);
-        symbolTable.enterGlobalScope();
+        n.f4.accept(this, className);
+        symbolTable.exitLocalScope();
 
         return null;
     }
@@ -42,11 +42,11 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(ClassExtendsDeclaration n, String argu) throws Exception {
         String className = n.f1.accept(this, null);
-        Class classSymbol = (Class) symbolTable.getSymbol(className);
+        Class classSymbol = symbolTable.getClass(className);
 
         symbolTable.enterScope(classSymbol.getScope());
-        n.f6.accept(this, null);
-        symbolTable.enterGlobalScope();
+        n.f6.accept(this, className);
+        symbolTable.exitLocalScope();
 
         return null;
     }
@@ -67,21 +67,100 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
      * f12 -> "}"
      */
     @Override
-    public String visit(MethodDeclaration n, String argu) throws Exception {
+    public String visit(MethodDeclaration n, String className) throws Exception {
 
         String returnType = n.f1.accept(this, null);
         String methodName = n.f2.accept(this, null);
-        Method method = (Method) symbolTable.getSymbol(methodName);
+        Method method = symbolTable.getMethod(methodName, className);
 
+        assert method != null;
         symbolTable.enterScope(method.getLocalScope());
         n.f8.accept(this, null);
-        symbolTable.exitScope();
+
 
         // TODO check that return expression type matches method return type
+
+        String returnExprType = n.f10.accept(this, null);
+        if (!returnExprType.equals(returnType))
+            throw new SemanticException("Return type " + returnExprType + " of method " + className + "." + methodName + " doesn't match declared type " + returnType);
+
+        symbolTable.exitLocalScope();
 
 //        super.visit(n, argu);
         return null;
     }
+
+    /**
+     * Grammar production:
+     * f0 -> IntegerLiteral()
+     *       | TrueLiteral()
+     *       | FalseLiteral()
+     *       | Identifier()
+     *       | ThisExpression()
+     *       | ArrayAllocationExpression()
+     *       | AllocationExpression()
+     *       | BracketExpression()
+     */
+    public String visit(PrimaryExpression n, String argu) throws Exception {
+        if (n.f0.which != 3)
+            return n.f0.accept(this, null);
+
+        String id = n.f0.accept(this, null);
+        return symbolTable.getLocal(id).varType;
+    }
+
+    public String visit(IntegerLiteral n, String argu) throws Exception {
+        return "int";
+    }
+
+    public String visit(TrueLiteral n, String argu) throws Exception {
+        return "boolean";
+    }
+
+    public String visit(FalseLiteral n, String argu) throws Exception {
+        return "boolean";
+    }
+
+    public String visit(ThisExpression n, String argu) throws Exception {
+        return "ThisExpression";
+    }
+
+    /**
+     * Grammar production:
+     * f0 -> BooleanArrayAllocationExpression()
+     *       | IntegerArrayAllocationExpression()
+     */
+    @Override
+    public String visit(ArrayAllocationExpression n, String argu) throws Exception {
+        n.f0.accept(this, null);
+        return "ArrayAllocationExpression";
+    }
+
+    /**
+     * f0 -> "new"
+     * f1 -> Identifier()
+     * f2 -> "("
+     * f3 -> ")"
+     */
+    @Override
+    public String visit(AllocationExpression n, String argu) throws Exception {
+        String id = n.f1.accept(this, null);
+        if (symbolTable.getClass(id) == null) {
+            throw new SemanticException("Instantiation of undefined class \'" + id + "\'");
+        }
+        return "AllocationExpression";
+    }
+
+    /**
+     * Grammar production:
+     * f0 -> "("
+     * f1 -> Expression()
+     * f2 -> ")"
+     */
+    public String visit(BracketExpression n, String argu) throws Exception {
+        return n.f1.accept(this, null);
+    }
+
 
     /**
      * f0 -> Identifier()
@@ -92,7 +171,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(AssignmentStatement n, String argu) throws Exception {
         String id = n.f0.accept(this, argu);
-        if(symbolTable.getSymbol(id) == null)
+        if(symbolTable.getLocal(id) == null)
             throw new SemanticException("Assignment to undefined variable " + id);
 
         // TODO check type of expression (two possible ways: return type from expression, or give expected type as argument to expression visitor)
@@ -116,38 +195,8 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         return null;
     }
 
-    /**
-     * Grammar production:
-     * f0 -> IntegerLiteral()
-     *       | TrueLiteral()
-     *       | FalseLiteral()
-     *       | Identifier()
-     *       | ThisExpression()
-     *       | ArrayAllocationExpression()
-     *       | AllocationExpression()
-     *       | BracketExpression()
-     */
-    @Override
-    public String visit(PrimaryExpression n, String argu) throws Exception {
-        n.f0.accept(this, argu);
-        return null;
-    }
-
-
-    /**
-     * f0 -> "new"
-     * f1 -> Identifier()
-     * f2 -> "("
-     * f3 -> ")"
-     */
-    @Override
-    public String visit(AllocationExpression n, String argu) throws Exception {
-        String id = n.f1.accept(this, null);
-        Symbol classSymbol = symbolTable.getSymbol(id);
-        if (classSymbol == null) {
-            throw new SemanticException("Instantiation of undefined class \'" + id + "\'");
-        }
-        return null;
+    public String visit(AndExpression n, String argu) {
+        return "AndExpression";
     }
 
     @Override
