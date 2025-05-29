@@ -64,7 +64,8 @@ public final class SymbolTable {
     }
 
     public void printOffsets() {
-        classesScope.printOffsets();
+        for (Class c: classesScope.getValues())
+            c.printOffsets();
     }
 
 }

@@ -38,10 +38,4 @@ public class Scope<T extends Symbol> {
             s.prettyPrint();
         }
     }
-
-    public void printOffsets() {
-        for (T s: map.values()) {
-                s.printOffsets();
-        }
-    }
 }

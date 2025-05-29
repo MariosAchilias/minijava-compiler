@@ -59,7 +59,6 @@ public class Class extends Symbol {
         return offset;
     }
 
-    @Override
     public void printOffsets() {
         int offset = superClass == null ? 0 : superClass.getFieldsOffset();
         for (Variable f : fields.getValues()) {
