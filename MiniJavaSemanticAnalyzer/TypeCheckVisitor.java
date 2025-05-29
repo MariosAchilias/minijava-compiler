@@ -7,8 +7,13 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         symbolTable = SymbolTable.getInstance();
     }
 
-    // TODO main class
-
+    public String visit(MainClass n, String argu) throws Exception {
+        symbolTable.enterScope(symbolTable.getMainScope());
+        /* f15 -> ( Statement() ) */
+        n.f15.accept(this, null);
+        symbolTable.exitLocalScope();
+        return null;
+    }
     /**
      * f0 -> "class"
      * f1 -> Identifier()

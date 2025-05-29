@@ -2,11 +2,13 @@ public final class SymbolTable {
     private static SymbolTable instance;
     private final Scope<Class> classesScope;
     private final Scope<Method> methodScope;
+    private final Scope<Variable> mainScope;
     private Scope<Variable> localScope;
 
     private SymbolTable() {
         classesScope = new Scope<Class>(null);
         methodScope = new Scope<Method>(null);
+        mainScope = new Scope<Variable>(null);
         localScope = null;
     }
 
@@ -57,6 +59,10 @@ public final class SymbolTable {
 
     public Scope<Method> getMethodScope() {
         return methodScope;
+    }
+
+    public Scope<Variable> getMainScope() {
+        return mainScope;
     }
 
     public void prettyPrint() {
