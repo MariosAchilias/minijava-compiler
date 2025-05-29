@@ -53,7 +53,8 @@ public class Class extends Symbol {
     private int getMethodsOffset() {
         int offset = superClass == null ? 0 : superClass.getMethodsOffset();
         for (Method m: SymbolTable.getInstance().getMethodScope().getValues()) {
-            offset += 8;
+            if (m.getClassName().equals(id))
+                offset += 8;
         }
         return offset;
     }
