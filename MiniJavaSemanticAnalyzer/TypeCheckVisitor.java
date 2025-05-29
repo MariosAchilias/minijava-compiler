@@ -90,6 +90,22 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         return null;
     }
 
+    public String visit(Clause n, String argu) throws Exception {
+        return n.f0.accept(this, null);
+    }
+
+    public String visit(NotExpression n, String argu) throws Exception {
+        if(!"boolean".equals(n.f1.accept(this, null)))
+            throw new SemanticException("Not operator used on non-boolean expression");
+        return "boolean";
+    }
+
+    public String visit(AndExpression n, String argu) throws Exception {
+        if (!"boolean".equals(n.f0.accept(this, argu)) || !"boolean".equals(n.f2.accept(this, argu)))
+            throw new SemanticException("Operand of && operator is non-boolean");
+        return "boolean";
+    }
+
     /**
      * Grammar production:
      * f0 -> IntegerLiteral()
@@ -132,8 +148,15 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(ArrayAllocationExpression n, String argu) throws Exception {
-        n.f0.accept(this, null);
-        return "ArrayAllocationExpression";
+        return n.f0.accept(this, null);
+    }
+
+    public String visit(BooleanArrayAllocationExpression n, String argu) throws Exception {
+        return "boolean[]";
+    }
+
+    public String visit(IntegerArrayAllocationExpression n, String argu) throws Exception {
+        return "int[]";
     }
 
     /**
@@ -193,10 +216,6 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         String id = n.f2.accept(this, null);
         n.f4.accept(this, argu);
         return null;
-    }
-
-    public String visit(AndExpression n, String argu) {
-        return "AndExpression";
     }
 
     @Override
