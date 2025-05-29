@@ -8,4 +8,6 @@ public class Symbol {
     public void prettyPrint() {
         System.out.println(type.toString() + " " + id);
     };
+
+    public void printOffsets() {return;}
 }

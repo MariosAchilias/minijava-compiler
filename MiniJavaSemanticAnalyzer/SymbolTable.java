@@ -1,11 +1,13 @@
 public final class SymbolTable {
     private static SymbolTable instance;
-    private Scope globalScope;
-    private Scope current;
+    private final Scope<Class> classesScope;
+    private final Scope<Method> methodScope;
+    private Scope<Variable> localScope;
 
     private SymbolTable() {
-        current = new Scope(null);
-        globalScope = current;
+        classesScope = new Scope<Class>(null);
+        methodScope = new Scope<Method>(null);
+        localScope = null;
     }
 
     public static SymbolTable getInstance() {
@@ -15,57 +17,54 @@ public final class SymbolTable {
         return instance;
     }
 
-    public Scope newScope() {
-        return new Scope(current);
+    public void enterScope(Scope<Variable> scope) {
+        localScope = scope;
     }
 
-    public void enterScope(Scope scope) {
-        current = scope;
+    public void exitLocalScope() {
+        localScope = localScope.getParent();
     }
 
-    public void exitScope() {
-        current = current.getParent();
+    public boolean addClass(String id, Class class_) {
+        return classesScope.addSymbol(id, class_);
     }
 
-    public void enterGlobalScope() {
-        current = globalScope;
+    public Class getClass(String id) {
+        return classesScope.get(id);
     }
 
-    public Scope getCurrScope() {
-        return current;
+    public boolean addLocal(String id, Variable symbol) {
+        return localScope.addSymbol(id, symbol);
     }
 
-    public Symbol getSymbol(String id) {
-        for (Scope s = current; s != null; s = s.getParent()) {
-            if (s.hasSymbol(id)) {
-                return s.getSymbol(id);
-            }
+    public Variable getLocal(String id) {
+        return localScope.getSymbol(id);
+    }
+
+    public boolean addMethod(String id, String className, Method method) {
+        return methodScope.addSymbol(id + "_" + className, method);
+    }
+
+    public Method getMethod(String id, String className) {
+        for (Class c = getClass(className); c != null; c = c.getParent()) {
+            String name = c.id;
+            Method method = methodScope.get(id + "_" + name);
+            if (method != null)
+                return method;
         }
         return null;
     }
 
-    public Symbol getLocal(String id) {
-        return current.getSymbol(id);
-    }
-
-    public boolean addSymbol(String id, Symbol symbol) {
-        return current.addSymbol(id, symbol);
+    public Scope<Method> getMethodScope() {
+        return methodScope;
     }
 
     public void prettyPrint() {
-        Scope topScope = current;
-        while (topScope.getParent() != null) {
-            topScope = topScope.getParent();
-        }
-        topScope.prettyPrint();
+        classesScope.prettyPrint();
     }
 
     public void printOffsets() {
-        Scope topScope = current;
-        while (topScope.getParent() != null) {
-            topScope = topScope.getParent();
-        }
-        topScope.printOffsets();
+        classesScope.printOffsets();
     }
 
 }

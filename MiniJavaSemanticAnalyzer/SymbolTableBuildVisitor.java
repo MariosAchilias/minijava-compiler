@@ -54,8 +54,8 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
 
         String className = n.f1.accept(this, null);
 
-        Class classSymbol = new Class(className, null, symbolTable.getCurrScope());
-        symbolTable.addSymbol(className, classSymbol);
+        Class classSymbol = new Class(className, null);
+        symbolTable.addClass(className, classSymbol);
         symbolTable.enterScope(classSymbol.getScope());
 
         n.f2.accept(this, null);
@@ -63,7 +63,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
         n.f4.accept(this, classSymbol);
         n.f5.accept(this, null);
 
-        symbolTable.exitScope();
+        symbolTable.exitLocalScope();
 
         return null;
     }
@@ -86,18 +86,17 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
         String superClassName = n.f3.accept(this, null);
 
         // check error (superclass not defined) TODO
-        Class superClass = (Class) symbolTable.getSymbol(superClassName);
+        Class superClass = symbolTable.getClass(superClassName);
 
-        Class classSymbol = new Class(className, superClass, superClass.getScope());
+        Class classSymbol = new Class(className, superClass);
 
-        symbolTable.addSymbol(className, classSymbol);
+        symbolTable.addClass(className, classSymbol);
 
         symbolTable.enterScope(classSymbol.getScope());
 
         n.f5.accept(this, classSymbol);
         n.f6.accept(this, classSymbol);
 
-        symbolTable.enterGlobalScope();
         return null;
     }
 
@@ -114,7 +113,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
             throw new SemanticException("Double definition of variable " + name);
 
         Variable var = new Variable(type, name);
-        symbolTable.addSymbol(name, var);
+        symbolTable.addLocal(name, var);
         if (argu != null && argu.type == SymbolType.CLASS) {
             Class class_ = (Class) argu;
             class_.addField(var);
@@ -148,26 +147,26 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
         String retType = n.f1.accept(this, null);
         String name = n.f2.accept(this, null);
 
-        Method method = new Method(retType, name, null, class_.getScope());
+        Method method = new Method(retType, name, null, class_.id);
+
+        symbolTable.addMethod(name, class_.id, method);
+
+        symbolTable.enterScope(method.getLocalScope());
+
         // FormalParameterList visitor should create and set array
         if (n.f4.present())
             n.f4.accept(this, method);
 
 
-        class_.addMethod(method);
-        symbolTable.addSymbol(name, method);
-
-        symbolTable.enterScope(method.getLocalScope());
-
         n.f7.accept(this, null);
 
-        symbolTable.exitScope();
+        symbolTable.exitLocalScope();
 
         // If method exists in parent class, it must be a valid override (i.e. have same return & argument types)
-        if (class_.getParent() == null || class_.getParent().getMethod(name) == null)
+        if (class_.getParent() == null || symbolTable.getMethod(name, class_.getParent().id) == null)
             return null;
 
-        Method overriden = class_.getParent().getMethod(name);
+        Method overriden = symbolTable.getMethod(name, class_.getParent().id);
         if (!Method.compatibleSignatures(method, overriden))
             throw new SemanticException("Method override has incompatible return type and/or argument types");
 
@@ -226,7 +225,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
         Method method = (Method) argu;
         Variable param = new Variable(type, name);
         method.parameters.add(param);
-        symbolTable.addSymbol(name, param);
+        symbolTable.addLocal(name, param);
 
         return type + " " + name;
     }
