@@ -181,7 +181,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         if (symbolTable.getClass(id) == null) {
             throw new SemanticException("Instantiation of undefined class \'" + id + "\'");
         }
-        return "AllocationExpression";
+        return id;
     }
 
     /**
@@ -204,11 +204,14 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(AssignmentStatement n, String argu) throws Exception {
         String id = n.f0.accept(this, argu);
-        if(symbolTable.getLocal(id) == null)
+        Variable leftHandSide = symbolTable.getLocal(id);
+        if(leftHandSide == null)
             throw new SemanticException("Assignment to undefined variable " + id);
 
-        // TODO check type of expression (two possible ways: return type from expression, or give expected type as argument to expression visitor)
-        n.f2.accept(this, argu);
+        String exprType = n.f2.accept(this, argu);
+        System.out.println(exprType);
+        if(!leftHandSide.varType.equals(exprType))
+            throw new Exception("Assignment expression type doesn't match left hand side variable type");
         return null;
     }
     /**
