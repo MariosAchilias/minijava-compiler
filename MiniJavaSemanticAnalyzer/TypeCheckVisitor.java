@@ -157,10 +157,15 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     }
 
     public String visit(BooleanArrayAllocationExpression n, String argu) throws Exception {
+         /* f3 -> Expression() */
+        if(!"int".equals(n.f3.accept(this, null)))
+            throw new SemanticException("Array size in allocation expression must evaluate to an integer");
         return "boolean[]";
     }
 
     public String visit(IntegerArrayAllocationExpression n, String argu) throws Exception {
+        if(!"int".equals(n.f3.accept(this, null)))
+            throw new SemanticException("Array size in allocation expression must evaluate to an integer");
         return "int[]";
     }
 
