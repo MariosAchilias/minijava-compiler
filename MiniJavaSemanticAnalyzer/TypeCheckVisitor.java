@@ -127,6 +127,14 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         return "int";
     }
 
+    public String visit(MinusExpression n, String argu) throws Exception {
+        String leftOpType = n.f0.accept(this, argu);
+        String rightOpType = n.f2.accept(this, argu);
+        if (!leftOpType.equals("int") || !rightOpType.equals("int"))
+            throw new SemanticException("\"-\" operator given non-integer argument");
+        return "int";
+    }
+
     public String visit(TimesExpression n, String argu) throws Exception {
         String leftOpType = n.f0.accept(this, argu);
         String rightOpType = n.f2.accept(this, argu);
@@ -256,7 +264,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
             throw new SemanticException("Array assignment with non-integer expression as index");
 
         String arrayType = symbolTable.getLocal(n.f0.accept(this, argu)).varType;
-        String exprType = symbolTable.getLocal(n.f4.accept(this, argu)).varType;
+        String exprType = n.f5.accept(this, argu);
 
         if (arrayType.equals("int[]") && exprType.equals("int"))
             return null;
@@ -297,7 +305,6 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(MessageSend n, String argu) throws Exception {
-        // TODO: method calls
         String className = n.f0.accept(this, argu);
         if (symbolTable.getClass(className) == null)
             throw new SemanticException("Method call to method of undefined class");
