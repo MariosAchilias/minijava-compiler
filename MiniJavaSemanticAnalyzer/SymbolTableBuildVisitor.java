@@ -135,13 +135,15 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
      */
     @Override
     public String visit(MethodDeclaration n, Symbol argu) throws Exception {
-//        String argumentList = n.f4.present() ? n.f4.accept(this, null) : "";
-
         assert(argu != null && argu.type == SymbolType.CLASS);
         Class class_ = (Class) argu;
 
-        String retType = n.f1.accept(this, null);
         String name = n.f2.accept(this, null);
+
+        String retType = n.f1.accept(this, null);
+        if (!(retType.equals("int") || retType.equals("boolean") || retType.equals("int[]") || retType.equals("boolean[]")))
+            if (symbolTable.getClass(retType) == null)
+                throw new SemanticException("Undeclared class '" + retType + "' in method '" + name + "' return type");
 
         Method method = new Method(retType, name, null, class_.id);
 
