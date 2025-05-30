@@ -22,6 +22,16 @@ public class Class extends Symbol {
 
     public Variable getField(String id) {return fields.get(id);}
 
+    public static boolean isSubtype(Class base, Class derived) {
+        boolean flag = false;
+        for (Class c = derived; c != null; c = c.getParent()) {
+            if (c.id.equals(base.id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void prettyPrint() {
         System.out.println("Class: " + id);
         System.out.println("Fields: ");

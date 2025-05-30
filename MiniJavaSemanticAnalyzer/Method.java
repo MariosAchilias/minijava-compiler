@@ -27,19 +27,10 @@ public class Method extends Symbol{
             return false;
         for (int i = 0; i < methodParameters.size(); i++) {
             String type = methodParameters.get(i).varType;
-            // if parameter is of user-defined type, check if given parameter is a subtype -- a bit ugly TODO: rewrite
+            // if parameter is of user-defined type, check if given parameter is a subtype
             if (!(type.equals("int") || type.equals("boolean") || type.equals("int[]") || type.equals("boolean[]"))) {
-                boolean flag = false;
-                for (Class c = SymbolTable.getInstance().getClass(testParameters.get(i).varType); c != null; c = c.getParent()) {
-                    if (c.id.equals(type)) {
-                        flag = true;
-                        break;
-                    }
-                }
-                if (flag)
-                    continue;
-                else
-                    return false;
+                SymbolTable st = SymbolTable.getInstance();
+                return Class.isSubtype(st.getClass(type), st.getClass(testParameters.get(i).varType));
             }
 
             if (!methodParameters.get(i).varType.equals(testParameters.get(i).varType))

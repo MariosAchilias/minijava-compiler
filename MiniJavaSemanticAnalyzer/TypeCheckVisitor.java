@@ -261,8 +261,11 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
             throw new SemanticException("Assignment to undefined variable " + id);
 
         String exprType = n.f2.accept(this, argu);
-        if(!leftHandSide.varType.equals(exprType))
-            throw new Exception("Assignment expression type doesn't match left hand side variable type");
+        if (!Variable.isBuiltin(exprType) && !Variable.isBuiltin(leftHandSide.varType)) {
+            if (!Class.isSubtype(symbolTable.getClass(leftHandSide.varType), symbolTable.getClass(exprType)))
+                throw new SemanticException("Assignment to variable of different class that isn't a superclass");
+        } else if(!leftHandSide.varType.equals(exprType))
+            throw new SemanticException("Assignment expression type doesn't match left hand side variable type");
         return null;
     }
 
