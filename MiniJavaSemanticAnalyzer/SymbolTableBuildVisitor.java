@@ -109,6 +109,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
             throw new SemanticException("Double definition of variable " + name);
 
         Variable var = new Variable(type, name);
+        System.out.println("Declared variable: " + type + " " + name);
         symbolTable.addLocal(name, var);
         if (argu != null && argu.type == SymbolType.CLASS) {
             Class class_ = (Class) argu;
@@ -227,8 +228,15 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
     }
 
 
-    @Override
-    public String visit(ArrayType n, Symbol argu) {
+    public String visit(ArrayType n, String argu) throws Exception {
+        return n.f0.accept(this, null);
+    }
+
+    public String visit(BooleanArrayType n, String argu) {
+        return "boolean[]";
+    }
+
+    public String visit(IntegerArrayType n, String argu) {
         return "int[]";
     }
 
