@@ -323,19 +323,39 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         for (String s: argTypes.split(";"))
             tempParameters.add(new Variable(s, ""));
         if(!Method.compatibleParameters(method.parameters, tempParameters))
-            throw new SemanticException("Method call doesn't match method parameters in number or types");
+            throw new SemanticException("Method call to " + methodName + " doesn't match method parameters in number or types");
 
         return method.returnType;
     }
 
+    /**
+     * Grammar production:
+     * f0 -> Expression()
+     * f1 -> ExpressionTail()
+     */
     public String visit(ExpressionList n, String argu) throws Exception {
         return n.f0.accept(this, argu) + ";" + n.f1.accept(this, argu);
     }
 
+    /**
+     * Grammar production:
+     * f0 -> ( ExpressionTerm() )*
+     */
     public String visit(ExpressionTail n, String argu) throws Exception {
-        if (!n.f0.present())
-            return "";
-        return n.f0.accept(this, argu);
+        StringBuilder tail = new StringBuilder();
+        for (Node n_: n.f0.nodes)
+            tail.append(n_.accept(this, argu) + ";");
+
+        return tail.toString();
+    }
+
+    /**
+     * Grammar production:
+     * f0 -> ","
+     * f1 -> Expression()
+     */
+    public String visit(ExpressionTerm n, String argu) throws Exception {
+        return n.f1.accept(this, argu);
     }
 
     @Override
