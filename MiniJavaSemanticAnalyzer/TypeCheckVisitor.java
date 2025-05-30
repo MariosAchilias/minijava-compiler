@@ -36,6 +36,15 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         return null;
     }
 
+    public String visit(VarDeclaration n, String argu) throws Exception {
+        String type = n.f0.accept(this, null);
+        if (!Variable.isBuiltin(type))
+            if (symbolTable.getClass(type) == null)
+                throw new SemanticException("Definition of variable of undeclared type '" + type + "'");
+
+        return null;
+    }
+
     /**
      * f0 -> "class"
      * f1 -> Identifier()
