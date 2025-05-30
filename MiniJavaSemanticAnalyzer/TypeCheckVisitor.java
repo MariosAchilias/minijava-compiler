@@ -251,16 +251,32 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         return null;
     }
 
-/**
- * Grammar production:
- * f0 -> "if"
- * f1 -> "("
- * f2 -> Expression()
- * f3 -> ")"
- * f4 -> Statement()
- * f5 -> "else"
- * f6 -> Statement()
- */
+    public String visit(ArrayAssignmentStatement n, String argu) throws Exception {
+        if (!"int".equals(n.f2.accept(this, argu)))
+            throw new SemanticException("Array assignment with non-integer expression as index");
+
+        String arrayType = symbolTable.getLocal(n.f0.accept(this, argu)).varType;
+        String exprType = symbolTable.getLocal(n.f4.accept(this, argu)).varType;
+
+        if (arrayType.equals("int[]") && exprType.equals("int"))
+            return null;
+
+        if (arrayType.equals("boolean[]") && exprType.equals("boolean"))
+            return null;
+
+        throw new SemanticException("Array assignment to value of incompatible type");
+    }
+
+    /**
+    * Grammar production:
+    * f0 -> "if"
+    * f1 -> "("
+    * f2 -> Expression()
+    * f3 -> ")"
+    * f4 -> Statement()
+    * f5 -> "else"
+    * f6 -> Statement()
+    */
     @Override
     public String visit(IfStatement n, String argu) throws Exception {
         if(!"boolean".equals(n.f2.accept(this, argu)))
