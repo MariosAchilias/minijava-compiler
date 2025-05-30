@@ -288,7 +288,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         if (array.varType.equals("boolean[]") && exprType.equals("boolean"))
             return null;
 
-        throw new SemanticException("Array assignment to value of incompatible type");
+        throw new SemanticException("Array assignment to variable of non-array type");
     }
 
     /**

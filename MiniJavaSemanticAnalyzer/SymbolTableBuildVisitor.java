@@ -231,6 +231,10 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
 
         Method method = (Method) argu;
         Variable param = new Variable(type, name);
+        for (Variable v: method.parameters) {
+            if (v.id.equals(name))
+                throw new SemanticException("Duplicate parameter '" + name + "' in '" + method.id + "' method declaration");
+        }
         method.parameters.add(param);
         symbolTable.addLocal(name, param);
 
