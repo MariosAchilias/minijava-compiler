@@ -109,7 +109,6 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
             throw new SemanticException("Double definition of variable " + name);
 
         Variable var = new Variable(type, name);
-        System.out.println("Declared variable: " + type + " " + name);
         symbolTable.addLocal(name, var);
         if (argu != null && argu.type == SymbolType.CLASS) {
             Class class_ = (Class) argu;
@@ -164,7 +163,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
             return null;
 
         Method overriden = symbolTable.getMethod(name, class_.getParent().id);
-        if (method.returnType.equals(overriden.returnType))
+        if (!method.returnType.equals(overriden.returnType))
             throw new SemanticException("Method override has different return type");
         if (!Method.compatibleParameters(method.parameters, overriden.parameters))
             throw new SemanticException("Method override has incompatible argument types");
