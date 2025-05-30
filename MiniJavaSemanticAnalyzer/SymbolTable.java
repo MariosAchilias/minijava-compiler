@@ -47,6 +47,8 @@ public final class SymbolTable {
         return localScope.getSymbol(id);
     }
 
+    public Variable getLocalInnermost(String id) { return localScope.getSymbolInnermost(id); }
+
     public boolean addMethod(String id, String className, Method method) {
         return methodScope.addSymbol(id + "_" + className, method);
     }

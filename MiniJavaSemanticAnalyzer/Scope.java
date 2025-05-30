@@ -30,6 +30,10 @@ public class Scope<T extends Symbol> {
         return null;
     }
 
+    public T getSymbolInnermost(String id) {
+        return map.get(id);
+    }
+
     public boolean addSymbol(String id, T symbol) {
         return map.put(id, symbol) == null;
     }

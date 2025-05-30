@@ -109,7 +109,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
         String type = n.f0.accept(this, argu);
         String name = n.f1.accept(this, argu);
 
-        if (symbolTable.getLocal(name) != null)
+        if (symbolTable.getLocalInnermost(name) != null)
             throw new SemanticException("Double definition of variable " + name);
 
         Variable var = new Variable(type, name);
