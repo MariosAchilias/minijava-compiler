@@ -1,6 +1,8 @@
 import syntaxtree.*;
 import visitor.*;
 
+import java.util.ArrayList;
+
 class TypeCheckVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
     public TypeCheckVisitor() {
@@ -282,12 +284,28 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
             throw new SemanticException("Method call to method of undefined class");
 
         String methodName = n.f2.accept(this, argu);
-        if (symbolTable.getMethod(methodName, className) == null)
+        Method method = symbolTable.getMethod(methodName, className);
+        if (method == null)
             throw new SemanticException("Class " + className + " or its parent classes have no method " + methodName);
 
-        // TODO: check parameters
+        java.util.ArrayList<Variable> tempParameters = new ArrayList<>();
+        String argTypes = n.f4.accept(this, null); // semicolon-separated types
+        for (String s: argTypes.split(";"))
+            tempParameters.add(new Variable(s, ""));
+        if(!Method.compatibleParameters(method.parameters, tempParameters))
+            throw new SemanticException("Method call doesn't match method parameters in number or types");
 
-        return null;
+        return method.returnType;
+    }
+
+    public String visit(ExpressionList n, String argu) throws Exception {
+        return n.f0.accept(this, null) + ";" + n.f1.accept(this, null);
+    }
+
+    public String visit(ExpressionTail n, String argu) throws Exception {
+        if (!n.f0.present())
+            return "";
+        return n.f0.accept(this, null);
     }
 
     @Override
