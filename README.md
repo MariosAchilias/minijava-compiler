@@ -1,6 +1,18 @@
 # Marios-Efstratios Achilias sdi2000015
 
-# Part 1
+# HW2
+
+Build and run:
+
+```
+cd MiniJavaSemanticAnalyzer
+make
+java Main <file1> <file2> ...
+```
+
+# HW1
+
+## Part 1
 
 Basic grammar:
 
@@ -55,7 +67,7 @@ make
 make execute
 ```
 
-# Part 2
+## Part 2
 
 Produces expected output on all 3 given examples.
 
