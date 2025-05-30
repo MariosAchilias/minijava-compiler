@@ -228,15 +228,15 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
     }
 
 
-    public String visit(ArrayType n, String argu) throws Exception {
+    public String visit(ArrayType n, Symbol argu) throws Exception {
         return n.f0.accept(this, null);
     }
 
-    public String visit(BooleanArrayType n, String argu) {
+    public String visit(BooleanArrayType n, Symbol argu) {
         return "boolean[]";
     }
 
-    public String visit(IntegerArrayType n, String argu) {
+    public String visit(IntegerArrayType n, Symbol argu) {
         return "int[]";
     }
 
