@@ -49,6 +49,8 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
         n.f0.accept(this, null);
 
         String className = n.f1.accept(this, null);
+        if (symbolTable.getClass(className) != null)
+            throw new SemanticException("Double declaration of class '" + className + "'");
 
         Class classSymbol = new Class(className, null);
         symbolTable.addClass(className, classSymbol);
@@ -79,8 +81,10 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
         n.f0.accept(this, null);
 
         String className = n.f1.accept(this, null);
-        String superClassName = n.f3.accept(this, null);
+        if (symbolTable.getClass(className) != null)
+            throw new SemanticException("Double declaration of class '" + className + "'");
 
+        String superClassName = n.f3.accept(this, null);
         Class superClass = symbolTable.getClass(superClassName);
         if (superClass == null)
             throw new SemanticException("Class '" + className + "' extends undeclared class '" + superClassName + "'");
