@@ -164,8 +164,10 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
             return null;
 
         Method overriden = symbolTable.getMethod(name, class_.getParent().id);
-        if (!Method.compatibleSignatures(method, overriden))
-            throw new SemanticException("Method override has incompatible return type and/or argument types");
+        if (method.returnType.equals(overriden.returnType))
+            throw new SemanticException("Method override has different return type");
+        if (!Method.compatibleParameters(method.parameters, overriden.parameters))
+            throw new SemanticException("Method override has incompatible argument types");
 
 //        super.visit(n, argu);
         return null;

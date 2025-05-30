@@ -22,13 +22,11 @@ public class Method extends Symbol{
         return localVars;
     }
 
-    public static boolean compatibleSignatures(Method method, Method method_) {
-        if (!method.returnType.equals(method_.returnType))
+    public static boolean compatibleParameters(ArrayList<Variable> parameters, ArrayList<Variable> parameters_) {
+        if (parameters.size() != parameters_.size())
             return false;
-        if (method.parameters.size() != method_.parameters.size())
-            return false;
-        for (int i = 0; i < method.parameters.size(); i++)
-            if (method.parameters.get(i).varType != method_.parameters.get(i).varType)
+        for (int i = 0; i < parameters.size(); i++)
+            if (!parameters.get(i).varType.equals(parameters_.get(i).varType))
                 return false;
 
         return true;
