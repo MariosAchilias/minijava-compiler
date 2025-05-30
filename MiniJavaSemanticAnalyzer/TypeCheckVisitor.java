@@ -150,7 +150,10 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         String arrayType = n.f0.accept(this, argu);
         if (arrayType.equals("int[]"))
             return "int";
-        return "boolean";
+        if (arrayType.equals("boolean[]"))
+            return "boolean";
+
+        throw new SemanticException("\"[]\" operator used on non-array variable");
     }
 
     public String visit(ArrayLength n, String argu) throws Exception {
@@ -273,13 +276,16 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         if (!"int".equals(n.f2.accept(this, argu)))
             throw new SemanticException("Array assignment with non-integer expression as index");
 
-        String arrayType = symbolTable.getLocal(n.f0.accept(this, argu)).varType;
+        Variable array = symbolTable.getLocal(n.f0.accept(this, argu));
+        if (array == null) {
+            throw new SemanticException("Array assignment to variable that doesn't exist in scope: " + n.f0.accept(this, argu));
+        }
         String exprType = n.f5.accept(this, argu);
 
-        if (arrayType.equals("int[]") && exprType.equals("int"))
+        if (array.varType.equals("int[]") && exprType.equals("int"))
             return null;
 
-        if (arrayType.equals("boolean[]") && exprType.equals("boolean"))
+        if (array.varType.equals("boolean[]") && exprType.equals("boolean"))
             return null;
 
         throw new SemanticException("Array assignment to value of incompatible type");

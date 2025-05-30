@@ -47,10 +47,13 @@ public final class SymbolTable {
         return methodScope.addSymbol(id + "_" + className, method);
     }
 
+    public Method getMethodLocal(String id, String className) {
+        return methodScope.get(id + "_" + className);
+    }
+
     public Method getMethod(String id, String className) {
         for (Class c = getClass(className); c != null; c = c.getParent()) {
-            String name = c.id;
-            Method method = methodScope.get(id + "_" + name);
+            Method method = getMethodLocal(id, c.id);
             if (method != null)
                 return method;
         }

@@ -144,6 +144,8 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
         Class class_ = (Class) argu;
 
         String name = n.f2.accept(this, null);
+        if (symbolTable.getMethodLocal(name, class_.id) != null)
+            throw new SemanticException("Double declaration of method '"+ name + "'");
 
         String retType = n.f1.accept(this, null);
         if (!(retType.equals("int") || retType.equals("boolean") || retType.equals("int[]") || retType.equals("boolean[]")))
