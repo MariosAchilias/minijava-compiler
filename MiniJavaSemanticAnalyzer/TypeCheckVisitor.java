@@ -12,7 +12,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     public String visit(MainClass n, String argu) throws Exception {
         symbolTable.enterScope(symbolTable.getMainScope());
         /* f15 -> ( Statement() ) */
-        n.f15.accept(this, null);
+        n.f15.accept(this, argu);
         symbolTable.exitLocalScope();
         return null;
     }
@@ -26,7 +26,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(ClassDeclaration n, String argu) throws Exception {
-        String className = n.f1.accept(this, null);
+        String className = n.f1.accept(this, argu);
         Class classSymbol = symbolTable.getClass(className);
 
         symbolTable.enterScope(classSymbol.getScope());
@@ -48,7 +48,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(ClassExtendsDeclaration n, String argu) throws Exception {
-        String className = n.f1.accept(this, null);
+        String className = n.f1.accept(this, argu);
         Class classSymbol = symbolTable.getClass(className);
 
         symbolTable.enterScope(classSymbol.getScope());
@@ -76,16 +76,21 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(MethodDeclaration n, String className) throws Exception {
 
-        String returnType = n.f1.accept(this, null);
-        String methodName = n.f2.accept(this, null);
+        String returnType = n.f1.accept(this, className);
+        String methodName = n.f2.accept(this, className);
         Method method = symbolTable.getMethod(methodName, className);
 
         assert method != null;
         symbolTable.enterScope(method.getLocalScope());
-        n.f8.accept(this, null);
+        // TODO: remove
+//        System.out.println("Printing local scope of method " + methodName);
+//        method.getLocalScope().prettyPrint();
+//        System.out.println("And its parent scope: ");
+//        method.getLocalScope().getParent().prettyPrint();
+        n.f8.accept(this, className);
 
 
-        String returnExprType = n.f10.accept(this, null);
+        String returnExprType = n.f10.accept(this, className);
         if (!returnExprType.equals(returnType))
             throw new SemanticException("Return type " + returnExprType + " of method " + className + "." + methodName + " doesn't match declared type " + returnType);
 
@@ -96,11 +101,11 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     }
 
     public String visit(Clause n, String argu) throws Exception {
-        return n.f0.accept(this, null);
+        return n.f0.accept(this, argu);
     }
 
     public String visit(NotExpression n, String argu) throws Exception {
-        if(!"boolean".equals(n.f1.accept(this, null)))
+        if(!"boolean".equals(n.f1.accept(this, argu)))
             throw new SemanticException("Not operator used on non-boolean expression");
         return "boolean";
     }
@@ -112,34 +117,34 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     }
 
     public String visit(CompareExpression n, String argu) throws Exception {
-        String leftOpType = n.f0.accept(this, null);
-        String rightOpType = n.f2.accept(this, null);
+        String leftOpType = n.f0.accept(this, argu);
+        String rightOpType = n.f2.accept(this, argu);
         if (!leftOpType.equals("int") || !rightOpType.equals("int"))
             throw new SemanticException("\"<\" operator given non-integer argument");
         return "boolean";
     }
 
     public String visit(PlusExpression n, String argu) throws Exception {
-        String leftOpType = n.f0.accept(this, null);
-        String rightOpType = n.f2.accept(this, null);
+        String leftOpType = n.f0.accept(this, argu);
+        String rightOpType = n.f2.accept(this, argu);
         if (!leftOpType.equals("int") || !rightOpType.equals("int"))
             throw new SemanticException("\"+\" operator given non-integer argument");
         return "int";
     }
 
     public String visit(TimesExpression n, String argu) throws Exception {
-        String leftOpType = n.f0.accept(this, null);
-        String rightOpType = n.f2.accept(this, null);
+        String leftOpType = n.f0.accept(this, argu);
+        String rightOpType = n.f2.accept(this, argu);
         if (!leftOpType.equals("int") || !rightOpType.equals("int"))
             throw new SemanticException("\"*\" operator given non-integer argument");
         return "int";
     }
 
     public String visit(ArrayLookup n, String argu) throws Exception {
-        if (!n.f2.accept(this, null).equals("int"))
+        if (!n.f2.accept(this, argu).equals("int"))
             throw new SemanticException("Non-integer value used as array index");
 
-        String arrayType = n.f0.accept(this, null);
+        String arrayType = n.f0.accept(this, argu);
         if (arrayType.equals("int[]"))
             return "int";
         return "boolean";
@@ -158,9 +163,12 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
      */
     public String visit(PrimaryExpression n, String argu) throws Exception {
         if (n.f0.which != 3)
-            return n.f0.accept(this, null);
+            return n.f0.accept(this, argu);
 
-        String id = n.f0.accept(this, null);
+        String id = n.f0.accept(this, argu);
+        Variable var = symbolTable.getLocal(id);
+        if (var == null)
+            throw new SemanticException("Identifier " + id + " not found in scope");
         return symbolTable.getLocal(id).varType;
     }
 
@@ -176,8 +184,8 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         return "boolean";
     }
 
-    public String visit(ThisExpression n, String argu) throws Exception {
-        return "ThisExpression";
+    public String visit(ThisExpression n, String className) throws Exception {
+        return className;
     }
 
     /**
@@ -187,18 +195,18 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(ArrayAllocationExpression n, String argu) throws Exception {
-        return n.f0.accept(this, null);
+        return n.f0.accept(this, argu);
     }
 
     public String visit(BooleanArrayAllocationExpression n, String argu) throws Exception {
          /* f3 -> Expression() */
-        if(!"int".equals(n.f3.accept(this, null)))
+        if(!"int".equals(n.f3.accept(this, argu)))
             throw new SemanticException("Array size in allocation expression must evaluate to an integer");
         return "boolean[]";
     }
 
     public String visit(IntegerArrayAllocationExpression n, String argu) throws Exception {
-        if(!"int".equals(n.f3.accept(this, null)))
+        if(!"int".equals(n.f3.accept(this, argu)))
             throw new SemanticException("Array size in allocation expression must evaluate to an integer");
         return "int[]";
     }
@@ -211,9 +219,9 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(AllocationExpression n, String argu) throws Exception {
-        String id = n.f1.accept(this, null);
+        String id = n.f1.accept(this, argu);
         if (symbolTable.getClass(id) == null) {
-            throw new SemanticException("Instantiation of undefined class \'" + id + "\'");
+            throw new SemanticException("Instantiation of undefined class '" + id + "'");
         }
         return id;
     }
@@ -225,7 +233,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
      * f2 -> ")"
      */
     public String visit(BracketExpression n, String argu) throws Exception {
-        return n.f1.accept(this, null);
+        return n.f1.accept(this, argu);
     }
 
 
@@ -260,11 +268,11 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
  */
     @Override
     public String visit(IfStatement n, String argu) throws Exception {
-        if(!"boolean".equals(n.f2.accept(this, null)))
+        if(!"boolean".equals(n.f2.accept(this, argu)))
             throw new SemanticException("Non-boolean expression in if statement condition");
 
-        n.f4.accept(this, null);
-        n.f6.accept(this, null);
+        n.f4.accept(this, argu);
+        n.f6.accept(this, argu);
         return null;
     }
 
@@ -289,7 +297,11 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
             throw new SemanticException("Class " + className + " or its parent classes have no method " + methodName);
 
         java.util.ArrayList<Variable> tempParameters = new ArrayList<>();
-        String argTypes = n.f4.accept(this, null); // semicolon-separated types
+
+        if (method.parameters.isEmpty() && !n.f4.present()) // no parameters given to void method -- correct
+            return method.returnType;
+
+        String argTypes = n.f4.accept(this, argu); // semicolon-separated types
         for (String s: argTypes.split(";"))
             tempParameters.add(new Variable(s, ""));
         if(!Method.compatibleParameters(method.parameters, tempParameters))
@@ -299,18 +311,18 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     }
 
     public String visit(ExpressionList n, String argu) throws Exception {
-        return n.f0.accept(this, null) + ";" + n.f1.accept(this, null);
+        return n.f0.accept(this, argu) + ";" + n.f1.accept(this, argu);
     }
 
     public String visit(ExpressionTail n, String argu) throws Exception {
         if (!n.f0.present())
             return "";
-        return n.f0.accept(this, null);
+        return n.f0.accept(this, argu);
     }
 
     @Override
     public String visit(ArrayType n, String argu) throws Exception {
-        return n.f0.accept(this, null);
+        return n.f0.accept(this, argu);
     }
 
     public String visit(BooleanArrayType n, String argu) {
