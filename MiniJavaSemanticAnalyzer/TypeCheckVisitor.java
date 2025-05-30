@@ -133,6 +133,16 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         return "int";
     }
 
+    public String visit(ArrayLookup n, String argu) throws Exception {
+        if (!n.f2.accept(this, null).equals("int"))
+            throw new SemanticException("Non-integer value used as array index");
+
+        String arrayType = n.f0.accept(this, null);
+        if (arrayType.equals("int[]"))
+            return "int";
+        return "boolean";
+    }
+
     /**
      * Grammar production:
      * f0 -> IntegerLiteral()
@@ -267,15 +277,29 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(MessageSend n, String argu) throws Exception {
         // TODO: method calls
-        String primaryExpression = n.f0.accept(this, null);
+        String className = n.f0.accept(this, argu);
+        if (symbolTable.getClass(className) == null)
+            throw new SemanticException("Method call to method of undefined class");
 
-        String id = n.f2.accept(this, null);
-        n.f4.accept(this, argu);
+        String methodName = n.f2.accept(this, argu);
+        if (symbolTable.getMethod(methodName, className) == null)
+            throw new SemanticException("Class " + className + " or its parent classes have no method " + methodName);
+
+        // TODO: check parameters
+
         return null;
     }
 
     @Override
-    public String visit(ArrayType n, String argu) {
+    public String visit(ArrayType n, String argu) throws Exception {
+        return n.f0.accept(this, null);
+    }
+
+    public String visit(BooleanArrayType n, String argu) {
+        return "boolean[]";
+    }
+
+    public String visit(IntegerArrayType n, String argu) {
         return "int[]";
     }
 
