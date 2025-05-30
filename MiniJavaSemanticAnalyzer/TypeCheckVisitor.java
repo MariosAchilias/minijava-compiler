@@ -90,6 +90,9 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         Method method = symbolTable.getMethod(methodName, className);
 
         assert method != null;
+
+        n.f4.accept(this, methodName);
+
         symbolTable.enterScope(method.getLocalScope());
         n.f8.accept(this, className);
 
@@ -101,6 +104,14 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         symbolTable.exitLocalScope();
 
 //        super.visit(n, argu);
+        return null;
+    }
+
+    public String visit(FormalParameter n, String argu) throws Exception {
+        String type = n.f0.accept(this, null);
+        if (!Variable.isBuiltin(type) && symbolTable.getClass(type) == null)
+            throw new SemanticException("Parameter of undeclared user defined type '" + type + "' in declaration of method '" + argu + "'");
+
         return null;
     }
 
