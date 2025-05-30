@@ -83,8 +83,6 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         n.f8.accept(this, null);
 
 
-        // TODO check that return expression type matches method return type
-
         String returnExprType = n.f10.accept(this, null);
         if (!returnExprType.equals(returnType))
             throw new SemanticException("Return type " + returnExprType + " of method " + className + "." + methodName + " doesn't match declared type " + returnType);
@@ -115,8 +113,24 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         String leftOpType = n.f0.accept(this, null);
         String rightOpType = n.f2.accept(this, null);
         if (!leftOpType.equals("int") || !rightOpType.equals("int"))
-            throw new SemanticException("Compare expression only takes integer operands");
+            throw new SemanticException("\"<\" operator given non-integer argument");
         return "boolean";
+    }
+
+    public String visit(PlusExpression n, String argu) throws Exception {
+        String leftOpType = n.f0.accept(this, null);
+        String rightOpType = n.f2.accept(this, null);
+        if (!leftOpType.equals("int") || !rightOpType.equals("int"))
+            throw new SemanticException("\"+\" operator given non-integer argument");
+        return "int";
+    }
+
+    public String visit(TimesExpression n, String argu) throws Exception {
+        String leftOpType = n.f0.accept(this, null);
+        String rightOpType = n.f2.accept(this, null);
+        if (!leftOpType.equals("int") || !rightOpType.equals("int"))
+            throw new SemanticException("\"*\" operator given non-integer argument");
+        return "int";
     }
 
     /**
