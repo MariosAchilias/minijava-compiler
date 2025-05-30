@@ -11,6 +11,7 @@ class Main {
                 Goal root = parser.Goal();
                 System.out.println("Running semantic check on " + fileName);
 
+                SymbolTable.resetInstance();
                 SymbolTableBuildVisitor populateSymbolTable = new SymbolTableBuildVisitor();
                 root.accept(populateSymbolTable, null);
 

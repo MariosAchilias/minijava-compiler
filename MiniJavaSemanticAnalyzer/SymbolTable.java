@@ -19,6 +19,10 @@ public final class SymbolTable {
         return instance;
     }
 
+    public static void resetInstance() {
+        instance = new SymbolTable();
+    }
+
     public void enterScope(Scope<Variable> scope) {
         localScope = scope;
     }
