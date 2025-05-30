@@ -153,6 +153,13 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         return "boolean";
     }
 
+    public String visit(ArrayLength n, String argu) throws Exception {
+        String type = n.f0.accept(this, null);
+        if (!(type.equals("int[]") || type.equals("boolean")))
+            throw new SemanticException("'.length' can only be applied to arrays");
+        return "int";
+    }
+
     /**
      * Grammar production:
      * f0 -> IntegerLiteral()
@@ -294,6 +301,8 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         n.f6.accept(this, argu);
         return null;
     }
+
+    // TODO: WhileStatement
 
     /**
      * f0 -> PrimaryExpression()
