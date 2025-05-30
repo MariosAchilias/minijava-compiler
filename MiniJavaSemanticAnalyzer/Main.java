@@ -9,7 +9,7 @@ class Main {
                 fis = new FileInputStream(fileName);
                 MiniJavaParser parser = new MiniJavaParser(fis);
                 Goal root = parser.Goal();
-                System.err.println(fileName + " parsed successfully.");
+                System.out.println("Running semantic check on " + fileName);
 
                 SymbolTableBuildVisitor populateSymbolTable = new SymbolTableBuildVisitor();
                 root.accept(populateSymbolTable, null);
@@ -21,9 +21,12 @@ class Main {
 
             }
             catch(ParseException ex){
-                System.out.println(ex.getMessage());
+                System.err.println(ex.getMessage());
             }
             catch(FileNotFoundException ex){
+                System.err.println(ex.getMessage());
+            }
+            catch(SemanticException ex) {
                 System.err.println(ex.getMessage());
             }
             finally{
