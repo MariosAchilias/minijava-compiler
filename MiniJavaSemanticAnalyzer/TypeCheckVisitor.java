@@ -111,6 +111,14 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         return "boolean";
     }
 
+    public String visit(CompareExpression n, String argu) throws Exception {
+        String leftOpType = n.f0.accept(this, null);
+        String rightOpType = n.f2.accept(this, null);
+        if (!leftOpType.equals("int") || !rightOpType.equals("int"))
+            throw new SemanticException("Compare expression only takes integer operands");
+        return "boolean";
+    }
+
     /**
      * Grammar production:
      * f0 -> IntegerLiteral()
@@ -209,11 +217,31 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
             throw new SemanticException("Assignment to undefined variable " + id);
 
         String exprType = n.f2.accept(this, argu);
-        System.out.println(exprType);
         if(!leftHandSide.varType.equals(exprType))
             throw new Exception("Assignment expression type doesn't match left hand side variable type");
         return null;
     }
+
+/**
+ * Grammar production:
+ * f0 -> "if"
+ * f1 -> "("
+ * f2 -> Expression()
+ * f3 -> ")"
+ * f4 -> Statement()
+ * f5 -> "else"
+ * f6 -> Statement()
+ */
+    @Override
+    public String visit(IfStatement n, String argu) throws Exception {
+        if(!"boolean".equals(n.f2.accept(this, null)))
+            throw new SemanticException("Non-boolean expression in if statement condition");
+
+        n.f4.accept(this, null);
+        n.f6.accept(this, null);
+        return null;
+    }
+
     /**
      * f0 -> PrimaryExpression()
      * f1 -> "."
@@ -224,6 +252,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(MessageSend n, String argu) throws Exception {
+        // TODO: method calls
         String primaryExpression = n.f0.accept(this, null);
 
         String id = n.f2.accept(this, null);
