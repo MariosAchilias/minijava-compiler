@@ -82,11 +82,6 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
 
         assert method != null;
         symbolTable.enterScope(method.getLocalScope());
-        // TODO: remove
-//        System.out.println("Printing local scope of method " + methodName);
-//        method.getLocalScope().prettyPrint();
-//        System.out.println("And its parent scope: ");
-//        method.getLocalScope().getParent().prettyPrint();
         n.f8.accept(this, className);
 
 

@@ -21,12 +21,13 @@ public class Scope<T extends Symbol> {
         return map.values();
     }
 
-    public boolean hasSymbol(String id) {
-        return map.containsKey(id);
-    }
-
     public T getSymbol(String id) {
-        return map.get(id);
+        for (Scope<T> s = this; s != null; s = s.parent) {
+            T symbol = s.map.get(id);
+            if (symbol != null)
+                return symbol;
+        }
+        return null;
     }
 
     public boolean addSymbol(String id, T symbol) {
