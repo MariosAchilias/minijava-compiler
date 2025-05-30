@@ -37,7 +37,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     }
 
     public String visit(VarDeclaration n, String argu) throws Exception {
-        String type = n.f0.accept(this, null);
+        String type = n.f0.accept(this, argu);
         if (!Variable.isBuiltin(type))
             if (symbolTable.getClass(type) == null)
                 throw new SemanticException("Definition of variable of undeclared type '" + type + "'");
@@ -108,7 +108,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     }
 
     public String visit(FormalParameter n, String argu) throws Exception {
-        String type = n.f0.accept(this, null);
+        String type = n.f0.accept(this, argu);
         if (!Variable.isBuiltin(type) && symbolTable.getClass(type) == null)
             throw new SemanticException("Parameter of undeclared user defined type '" + type + "' in declaration of method '" + argu + "'");
 
@@ -177,7 +177,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     }
 
     public String visit(ArrayLength n, String argu) throws Exception {
-        String type = n.f0.accept(this, null);
+        String type = n.f0.accept(this, argu);
         if (!(type.equals("int[]") || type.equals("boolean")))
             throw new SemanticException("'.length' can only be applied to arrays");
         return "int";
@@ -195,8 +195,9 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
      *       | BracketExpression()
      */
     public String visit(PrimaryExpression n, String argu) throws Exception {
-        if (n.f0.which != 3)
+        if (n.f0.which != 3) {
             return n.f0.accept(this, argu);
+        }
 
         String id = n.f0.accept(this, argu);
         Variable var = symbolTable.getLocal(id);
@@ -312,7 +313,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     }
 
     public String visit(PrintStatement n, String argu) throws Exception {
-        if(!"int".equals(n.f2.accept(this, null)))
+        if(!"int".equals(n.f2.accept(this, argu)))
             throw new SemanticException("Print statement called with non-integer operand");
         return null;
     }
@@ -431,7 +432,6 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         return "int";
     }
 
-    @Override
     public String visit(Identifier n, String argu) {
         return n.f0.toString();
     }
