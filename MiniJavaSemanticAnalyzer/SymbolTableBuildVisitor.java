@@ -81,8 +81,9 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
         String className = n.f1.accept(this, null);
         String superClassName = n.f3.accept(this, null);
 
-        // check error (superclass not defined) TODO
         Class superClass = symbolTable.getClass(superClassName);
+        if (superClass == null)
+            throw new SemanticException("Class '" + className + "' extends undeclared class '" + superClassName + "'");
 
         Class classSymbol = new Class(className, superClass);
 
