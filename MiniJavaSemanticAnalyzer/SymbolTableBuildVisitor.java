@@ -1,7 +1,7 @@
 import syntaxtree.*;
 import visitor.*;
 
-class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
+class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
     public SymbolTableBuildVisitor() {
         symbolTable = SymbolTable.getInstance();
@@ -27,8 +27,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
      * f17 -> "}"
      */
     @Override
-    public String visit(MainClass n, Symbol argu) throws Exception {
-        String classname = n.f1.accept(this, null);
+    public String visit(MainClass n, String argu) throws Exception {
         symbolTable.enterScope(symbolTable.getMainScope());
         n.f14.accept(this, null);
         symbolTable.exitLocalScope();
@@ -45,7 +44,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
      * f5 -> "}"
      */
     @Override
-    public String visit(ClassDeclaration n, Symbol argu) throws Exception {
+    public String visit(ClassDeclaration n, String argu) throws Exception {
         n.f0.accept(this, null);
 
         String className = n.f1.accept(this, null);
@@ -57,8 +56,8 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
         symbolTable.enterScope(classSymbol.getScope());
 
         n.f2.accept(this, null);
-        n.f3.accept(this, classSymbol);
-        n.f4.accept(this, classSymbol);
+        n.f3.accept(this, className);
+        n.f4.accept(this, className);
         n.f5.accept(this, null);
 
         symbolTable.exitLocalScope();
@@ -77,7 +76,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
      * f7 -> "}"
      */
     @Override
-    public String visit(ClassExtendsDeclaration n, Symbol argu) throws Exception {
+    public String visit(ClassExtendsDeclaration n, String argu) throws Exception {
         n.f0.accept(this, null);
 
         String className = n.f1.accept(this, null);
@@ -95,8 +94,8 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
 
         symbolTable.enterScope(classSymbol.getScope());
 
-        n.f5.accept(this, classSymbol);
-        n.f6.accept(this, classSymbol);
+        n.f5.accept(this, className);
+        n.f6.accept(this, className);
 
         return null;
     }
@@ -106,7 +105,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
      * f1 -> Identifier()
      * f2 -> ";"
      */
-    public String visit(VarDeclaration n, Symbol argu) throws Exception {
+    public String visit(VarDeclaration n, String argu) throws Exception {
         String type = n.f0.accept(this, argu);
         String name = n.f1.accept(this, argu);
 
@@ -115,11 +114,11 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
 
         Variable var = new Variable(type, name);
         symbolTable.addLocal(name, var);
-        if (argu != null && argu.type == SymbolType.CLASS) {
-            Class class_ = (Class) argu;
+        Class class_ = symbolTable.getClass(argu);
+        if (class_ != null) {
             class_.addField(var);
         }
-//        super.visit(n, argu);
+
         return null;
     }
 
@@ -139,12 +138,9 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
      * f12 -> "}"
      */
     @Override
-    public String visit(MethodDeclaration n, Symbol argu) throws Exception {
-        assert(argu != null && argu.type == SymbolType.CLASS);
-        Class class_ = (Class) argu;
-
+    public String visit(MethodDeclaration n, String className) throws Exception {
         String name = n.f2.accept(this, null);
-        if (symbolTable.getMethodLocal(name, class_.id) != null)
+        if (symbolTable.getMethodLocal(name, className) != null)
             throw new SemanticException("Double declaration of method '"+ name + "'");
 
         String retType = n.f1.accept(this, null);
@@ -152,70 +148,33 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
             if (symbolTable.getClass(retType) == null)
                 throw new SemanticException("Undeclared class '" + retType + "' in method '" + name + "' return type");
 
-        Method method = new Method(retType, name, null, class_.id);
+        Method method = new Method(retType, name, null, className);
 
-        symbolTable.addMethod(name, class_.id, method);
+        symbolTable.addMethod(name, className, method);
 
         symbolTable.enterScope(method.getLocalScope());
 
         // FormalParameterList visitor should create and set array
         if (n.f4.present())
-            n.f4.accept(this, method);
+            n.f4.accept(this, className + ";" + name);
 
 
         n.f7.accept(this, null);
 
         symbolTable.exitLocalScope();
 
-        // If method exists in parent class, it must be a valid override (i.e. have same return & argument types)
-        if (class_.getParent() == null || symbolTable.getMethod(name, class_.getParent().id) == null)
+        // not overriding
+        if (symbolTable.getClass(className).getParent() == null || symbolTable.getMethod(name, symbolTable.getClass(className).getParent().id) == null)
             return null;
 
-        Method overriden = symbolTable.getMethod(name, class_.getParent().id);
+        Method overriden = symbolTable.getMethod(name, symbolTable.getClass(className).getParent().id);
+        assert overriden != null;
         if (!method.returnType.equals(overriden.returnType))
             throw new SemanticException("Method override has different return type");
         if (!Method.compatibleParameters(method.parameters, overriden.parameters))
             throw new SemanticException("Method override has incompatible argument types");
 
-//        super.visit(n, argu);
         return null;
-    }
-
-    /**
-     * f0 -> FormalParameter()
-     * f1 -> FormalParameterTail()
-     */
-    @Override
-    public String visit(FormalParameterList n, Symbol argu) throws Exception {
-        String ret = n.f0.accept(this, argu);
-
-        if (n.f1 != null) {
-            ret += n.f1.accept(this, argu);
-        }
-
-        return ret;
-    }
-
-    /**
-     * f0 -> FormalParameter()
-     * f1 -> FormalParameterTail()
-     */
-    public String visit(FormalParameterTerm n, Symbol argu) throws Exception {
-        return n.f1.accept(this, argu);
-    }
-
-    /**
-     * f0 -> ","
-     * f1 -> FormalParameter()
-     */
-    @Override
-    public String visit(FormalParameterTail n, Symbol argu) throws Exception {
-        String ret = "";
-        for ( Node node: n.f0.nodes) {
-            ret += ", " + node.accept(this, argu);
-        }
-
-        return ret;
     }
 
     /**
@@ -223,14 +182,15 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
      * f1 -> Identifier()
      */
     @Override
-    public String visit(FormalParameter n, Symbol argu) throws Exception {
-        assert(argu.type != null && argu.type == SymbolType.METHOD);
-
+    public String visit(FormalParameter n, String argu) throws Exception {
         String type = n.f0.accept(this, null);
         String name = n.f1.accept(this, null);
 
-        Method method = (Method) argu;
+        String className = argu.split(";")[0];
+        String methodName = argu.split(";")[1];
+        Method method = symbolTable.getMethod(methodName, className);
         Variable param = new Variable(type, name);
+        assert method != null;
         for (Variable v: method.parameters) {
             if (v.id.equals(name))
                 throw new SemanticException("Duplicate parameter '" + name + "' in '" + method.id + "' method declaration");
@@ -242,28 +202,28 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, Symbol>{
     }
 
 
-    public String visit(ArrayType n, Symbol argu) throws Exception {
+    public String visit(ArrayType n, String argu) throws Exception {
         return n.f0.accept(this, null);
     }
 
-    public String visit(BooleanArrayType n, Symbol argu) {
+    public String visit(BooleanArrayType n, String argu) {
         return "boolean[]";
     }
 
-    public String visit(IntegerArrayType n, Symbol argu) {
+    public String visit(IntegerArrayType n, String argu) {
         return "int[]";
     }
 
-    public String visit(BooleanType n, Symbol argu) {
+    public String visit(BooleanType n, String argu) {
         return "boolean";
     }
 
-    public String visit(IntegerType n, Symbol argu) {
+    public String visit(IntegerType n, String argu) {
         return "int";
     }
 
     @Override
-    public String visit(Identifier n, Symbol argu) {
+    public String visit(Identifier n, String argu) {
         return n.f0.toString();
     }
 }
