@@ -291,6 +291,12 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         throw new SemanticException("Array assignment to variable of non-array type");
     }
 
+    public String visit(PrintStatement n, String argu) throws Exception {
+        if(!"int".equals(n.f2.accept(this, null)))
+            throw new SemanticException("Print statement called with non-integer operand");
+        return null;
+    }
+
     /**
     * Grammar production:
     * f0 -> "if"
@@ -311,8 +317,14 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         return null;
     }
 
-    // TODO: WhileStatement
+    public String visit(WhileStatement n, String argu) throws Exception {
+        if(!"boolean".equals(n.f2.accept(this, argu)))
+            throw new SemanticException("Non-boolean expression in while statement condition");
 
+        n.f4.accept(this, argu);
+
+        return null;
+    }
     /**
      * f0 -> PrimaryExpression()
      * f1 -> "."
@@ -324,6 +336,8 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(MessageSend n, String argu) throws Exception {
         String className = n.f0.accept(this, argu);
+        if (Variable.isBuiltin(className))
+            throw new SemanticException("Method call on variable of built-in type");
         if (symbolTable.getClass(className) == null)
             throw new SemanticException("Method call to method of undefined class");
 
