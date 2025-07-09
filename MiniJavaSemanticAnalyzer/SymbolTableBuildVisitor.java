@@ -144,10 +144,6 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
             throw new SemanticException("Double declaration of method '"+ name + "'");
 
         String retType = n.f1.accept(this, null);
-        if (!(retType.equals("int") || retType.equals("boolean") || retType.equals("int[]") || retType.equals("boolean[]")))
-            if (symbolTable.getClass(retType) == null)
-                throw new SemanticException("Undeclared class '" + retType + "' in method '" + name + "' return type");
-
         Method method = new Method(retType, name, null, className);
 
         symbolTable.addMethod(name, className, method);
@@ -171,7 +167,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
         assert overriden != null;
         if (!method.returnType.equals(overriden.returnType))
             throw new SemanticException("Method override has different return type");
-        if (!Method.compatibleParameters(method.parameters, overriden.parameters))
+        if (!symbolTable.compatibleMethodParameters(method.parameters, overriden.parameters))
             throw new SemanticException("Method override has incompatible argument types");
 
         return null;

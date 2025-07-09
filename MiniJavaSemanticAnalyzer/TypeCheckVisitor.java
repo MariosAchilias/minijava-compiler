@@ -88,22 +88,24 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         String returnType = n.f1.accept(this, className);
         String methodName = n.f2.accept(this, className);
         Method method = symbolTable.getMethod(methodName, className);
-
         assert method != null;
+
+        String retType = n.f1.accept(this, null);
+        if (!(Variable.isBuiltin(retType) || symbolTable.getClass(retType) != null))
+            throw new SemanticException("Undeclared class '" + retType + "' in method '" + method.id + "' return type");
 
         n.f4.accept(this, methodName);
 
         symbolTable.enterScope(method.getLocalScope());
         n.f8.accept(this, className);
 
-
         String returnExprType = n.f10.accept(this, className);
-        if (!returnExprType.equals(returnType))
+
+        if (!(returnExprType.equals(returnType) || symbolTable.isSubclass(returnExprType, returnType)))
             throw new SemanticException("Return type " + returnExprType + " of method " + className + "." + methodName + " doesn't match declared type " + returnType);
 
         symbolTable.exitLocalScope();
 
-//        super.visit(n, argu);
         return null;
     }
 
@@ -178,7 +180,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
 
     public String visit(ArrayLength n, String argu) throws Exception {
         String type = n.f0.accept(this, argu);
-        if (!(type.equals("int[]") || type.equals("boolean")))
+        if (!(type.equals("int[]") || type.equals("boolean[]")))
             throw new SemanticException("'.length' can only be applied to arrays");
         return "int";
     }
@@ -285,11 +287,12 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
             throw new SemanticException("Assignment to undefined variable " + id);
 
         String exprType = n.f2.accept(this, argu);
-        if (!Variable.isBuiltin(exprType) && !Variable.isBuiltin(leftHandSide.varType)) {
-            if (!Class.isSubtype(symbolTable.getClass(leftHandSide.varType), symbolTable.getClass(exprType)))
-                throw new SemanticException("Assignment to variable of different class that isn't a superclass");
-        } else if(!leftHandSide.varType.equals(exprType))
-            throw new SemanticException("Assignment expression type doesn't match left hand side variable type");
+        if (exprType.equals(leftHandSide.varType))
+            return null;
+
+        if (!symbolTable.isSubclass(leftHandSide.varType, exprType))
+                throw new SemanticException("Assignment to variable of type " + leftHandSide.varType + " of expression of incompatible type " + exprType);
+
         return null;
     }
 
@@ -375,7 +378,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         String argTypes = n.f4.accept(this, argu); // semicolon-separated types
         for (String s: argTypes.split(";"))
             tempParameters.add(new Variable(s, ""));
-        if(!Method.compatibleParameters(method.parameters, tempParameters))
+        if(!symbolTable.compatibleMethodParameters(method.parameters, tempParameters))
             throw new SemanticException("Method call to " + methodName + " doesn't match method parameters in number or types");
 
         return method.returnType;
