@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public final class SymbolTable {
     private static SymbolTable instance;
     private final Scope<Class> classesScope;
@@ -64,6 +66,32 @@ public final class SymbolTable {
                 return method;
         }
         return null;
+    }
+
+    public boolean isSubclass(String derived, String base) {
+        for (Class c = getClass(derived); c != null; c = c.getParent()) {
+            if (base.equals(c.id))
+                return true;
+        }
+        return false;
+    }
+
+    public boolean compatibleMethodParameters(ArrayList<Variable> methodParameters, ArrayList<Variable> testParameters) {
+        if (methodParameters.size() != testParameters.size())
+            return false;
+        for (int i = 0; i < methodParameters.size(); i++) {
+            String paramType = methodParameters.get(i).varType;
+            String testParamType = testParameters.get(i).varType;
+            if (Variable.isBuiltin(paramType)) {
+                if (!paramType.equals((testParamType))) return false;
+                else continue;
+            }
+
+            if (!isSubclass(paramType, testParamType))
+                return false;
+        }
+
+        return true;
     }
 
     public Scope<Method> getMethodScope() {
