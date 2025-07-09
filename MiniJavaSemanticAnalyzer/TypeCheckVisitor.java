@@ -5,8 +5,8 @@ import java.util.ArrayList;
 
 class TypeCheckVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
-    public TypeCheckVisitor() {
-        symbolTable = SymbolTable.getInstance();
+    public TypeCheckVisitor(SymbolTable symbolTable) {
+        this.symbolTable = symbolTable;
     }
 
     public String visit(MainClass n, String argu) throws Exception {

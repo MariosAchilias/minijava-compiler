@@ -6,12 +6,12 @@ public class Method extends Symbol{
     private final Scope<Variable> localVars;
     private final String className;
 
-    public Method(String returnType, String methodName, ArrayList<Variable> parameters, String className) {
+    public Method(String returnType, String methodName, ArrayList<Variable> parameters, Scope classScope, String className) {
         super(SymbolType.METHOD, methodName);
         this.returnType = returnType;
         this.className = className;
         this.parameters = parameters == null ? new ArrayList<Variable>() : parameters;
-        this.localVars = new Scope<Variable>(SymbolTable.getInstance().getClass(className).getScope());
+        this.localVars = new Scope<Variable>(classScope);
     }
 
     public String getClassName() {

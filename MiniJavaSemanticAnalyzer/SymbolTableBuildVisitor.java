@@ -3,8 +3,8 @@ import visitor.*;
 
 class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
-    public SymbolTableBuildVisitor() {
-        symbolTable = SymbolTable.getInstance();
+    public SymbolTableBuildVisitor(SymbolTable symbolTable) {
+        this.symbolTable = symbolTable;
     }
     /**
      * f0 -> "class"
@@ -144,7 +144,7 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
             throw new SemanticException("Double declaration of method '"+ name + "'");
 
         String retType = n.f1.accept(this, null);
-        Method method = new Method(retType, name, null, className);
+        Method method = new Method(retType, name, null, symbolTable.getClass(className).getScope(), className);
 
         symbolTable.addMethod(name, className, method);
 

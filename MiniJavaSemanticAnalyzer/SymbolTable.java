@@ -1,28 +1,16 @@
 import java.util.ArrayList;
 
 public final class SymbolTable {
-    private static SymbolTable instance;
     private final Scope<Class> classesScope;
     private final Scope<Method> methodScope;
     private final Scope<Variable> mainScope;
     private Scope<Variable> localScope;
 
-    private SymbolTable() {
+    public SymbolTable() {
         classesScope = new Scope<Class>(null);
         methodScope = new Scope<Method>(null);
         mainScope = new Scope<Variable>(null);
         localScope = null;
-    }
-
-    public static SymbolTable getInstance() {
-        if (instance == null) {
-            instance = new SymbolTable();
-        }
-        return instance;
-    }
-
-    public static void resetInstance() {
-        instance = new SymbolTable();
     }
 
     public void enterScope(Scope<Variable> scope) {
@@ -108,7 +96,7 @@ public final class SymbolTable {
 
     public void printOffsets() {
         for (Class c: classesScope.getValues())
-            c.printOffsets();
+            c.printOffsets(this);
     }
 
 }

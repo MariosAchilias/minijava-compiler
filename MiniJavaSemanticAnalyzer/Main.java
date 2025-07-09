@@ -11,13 +11,12 @@ class Main {
                 Goal root = parser.Goal();
                 System.out.println("Running semantic check on " + fileName);
 
-                SymbolTable.resetInstance();
-                SymbolTableBuildVisitor populateSymbolTable = new SymbolTableBuildVisitor();
+                SymbolTable symbolTable = new SymbolTable();
+                SymbolTableBuildVisitor populateSymbolTable = new SymbolTableBuildVisitor(symbolTable);
                 root.accept(populateSymbolTable, null);
 
-                SymbolTable symbolTable = SymbolTable.getInstance();
                 symbolTable.printOffsets();
-                TypeCheckVisitor typeCheck = new TypeCheckVisitor();
+                TypeCheckVisitor typeCheck = new TypeCheckVisitor(symbolTable);
                 root.accept(typeCheck, null);
 
             }

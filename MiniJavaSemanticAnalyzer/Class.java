@@ -22,12 +22,12 @@ public class Class extends Symbol {
 
     public Variable getField(String id) {return fields.get(id);}
 
-    public void prettyPrint() {
+    public void prettyPrint(SymbolTable symbolTable) {
         System.out.println("Class: " + id);
         System.out.println("Fields: ");
         fields.prettyPrint();
         System.out.println("Methods: ");
-        for (Method m: SymbolTable.getInstance().getMethodScope().getValues()) {
+        for (Method m: symbolTable.getMethodScope().getValues()) {
             if (m.getClassName().equals(id))
                 m.prettyPrint();
         }
@@ -50,16 +50,17 @@ public class Class extends Symbol {
         return offset;
     }
 
-    private int getMethodsOffset() {
-        int offset = superClass == null ? 0 : superClass.getMethodsOffset();
-        for (Method m: SymbolTable.getInstance().getMethodScope().getValues()) {
+    private int getMethodsOffset(SymbolTable symbolTable) {
+        int offset = superClass == null ? 0 : superClass.getMethodsOffset(symbolTable);
+        for (Method m: symbolTable.getMethodScope().getValues()) {
             if (m.getClassName().equals(id))
                 offset += 8;
         }
         return offset;
     }
 
-    public void printOffsets() {
+    public void printOffsets(SymbolTable symbolTable) {
+        // TODO. proper offsets for overriden methods
         int offset = superClass == null ? 0 : superClass.getFieldsOffset();
         for (Variable f : fields.getValues()) {
             System.out.println(id + "." + f.id + " : " + offset);
@@ -74,8 +75,8 @@ public class Class extends Symbol {
                     offset += 8;
             }
         }
-        offset = superClass == null ? 0 : superClass.getMethodsOffset();
-        for (Method m : SymbolTable.getInstance().getMethodScope().getValues()) {
+        offset = superClass == null ? 0 : superClass.getMethodsOffset(symbolTable);
+        for (Method m : symbolTable.getMethodScope().getValues()) {
             if (!m.getClassName().equals(id))
                 continue;
             System.out.println(id + "." + m.id + " : " + offset);
