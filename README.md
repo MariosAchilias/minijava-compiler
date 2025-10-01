@@ -1,46 +1,46 @@
-# Marios-Efstratios Achilias sdi2000015
+## TODO
+- [ ] LLVM IR emmiter
+- [ ] run all stages
+- [ ] cleanup
 
-# HW2
+## Info
 
-Build and run:
+A BNF grammar for MiniJava can be found [here](https://cgi.di.uoa.gr/~compilers/project_files/minijava-new-2022/minijava.html).
 
+Semantic checker (MiniJavaSemanticAnalyzer) checks MiniJava programs for semantic errors (e.g. type errors).
+TODO: Add LLVM IR compiler
+
+This repo also contains 2 small exercises from a compilers class:
+* ExpressionEvaluator: a recursive descent parser for simple expressions (grammar below).
+* SourceToSourceTranslator: transpiler that translates programs from a simple language (described [here](https://cgi.di.uoa.gr/~compilers/project.html#hw-1)) to a slightly simpler language (without equality and suffix operators).
+
+## Building
+
+### Semantic Checker
 ```
 cd MiniJavaSemanticAnalyzer
 make
 java Main <file1> <file2> ...
 ```
-
-# HW1
-
-## Part 1
-
-Basic grammar:
-
+### ExpressionEvaluator
+```bash
+cd ExpressionEvaluator
+make
+make execute
 ```
-exp -> num | exp op exp | (exp)
+Input read from stdin.
 
-op -> + | - | **
+### SourceToSourceTranslator
 
-num -> digit | digit num
-
-digit -> 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
-```
-
-Modified to support operation precedence: (Not LL(1) yet)
-```
-exp -> powexp | powexp op factor
-
-powexp -> factor | factor ** factor
-
-op -> + | -
-
-factor -> num | (exp)
-
-num -> 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+```bash
+cd SourceToSourceTranslator
+make
+make execute < examples/ex1.txt
 ```
 
-Remove left recursion:
+### Recursive descent parser (ExpressionEvaluator)
 
+#### Grammar
 ```
 exp -> powexp ExpTail
 
@@ -59,48 +59,3 @@ num -> digit NumTail
 NumTail -> digit NumTail | ε
 ```
 
-Build: (input read from stdin)
-
-```bash
-cd ExpressionEvaluator
-make
-make execute
-```
-
-## Part 2
-
-Produces expected output on all 3 given examples.
-
-Build and run examples as such:
-```bash
-cd SourceToSourceTranslator
-make
-make execute < examples/ex1.txt
-```
-
-The prefix and reverse operators are implemented in java code using String.startsWith() and StringBuilder.reverse(), respectively.
-
-"if-else" expressions are converted to java ternary expressions.
-
-Source "if-else" expressions with equality comparisons are converted in IR code to a nested if-else expression as such:
-```
-if (e1 == e2)
-    e3
-else
-    e4
-```
-
-Becomes:
-
-```
-if (e1 prefix e2)
-    if (e2 prefix e1)
-        e3
-    else
-        e4
-else
-    e4
-```
-
-The suffix operator is converted to equivalent IR as such:
-``e1 suffix e2`` becomes: ``reverse e1 prefix reverse e2``
