@@ -15,7 +15,7 @@ public class ExpressionEvaluator {
 
     public int eval() throws IOException, ParseError {
         int value = Expr();
-        if (lookahead != -1 && lookahead != '\n')
+        if (lookahead != -1 && !(lookahead == '\n' || lookahead == '\r'))
             throw new ParseError();
         return value;
     }
