@@ -1,0 +1,3 @@
+[submodule "minijava-testsuite"]
+	path = minijava-testsuite
+	url = https://github.com/baziotis/minijava-testsuite.git
