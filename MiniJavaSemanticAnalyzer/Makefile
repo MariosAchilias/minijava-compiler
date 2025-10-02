@@ -1,10 +1,11 @@
 all: compile
 
+# Note the "-O" in wget commands is necessary because powershell uses a non-standard wget implementation
 javacc5.jar:
-	wget https://cgi.di.uoa.gr/~compilers/tools/javacc5.jar
+	curl https://cgi.di.uoa.gr/~compilers/tools/javacc5.jar --output javacc5.jar
 
 jtb132di.jar:
-	wget https://cgi.di.uoa.gr/~compilers/tools/jtb132di.jar
+	curl https://cgi.di.uoa.gr/~compilers/tools/jtb132di.jar --output jtb132di.jar
 
 compile: javacc5.jar jtb132di.jar
 	java -jar jtb132di.jar -te minijava.jj
