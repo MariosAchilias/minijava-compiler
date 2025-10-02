@@ -1,6 +1,5 @@
 all: compile
 
-# Note the "-O" in wget commands is necessary because powershell uses a non-standard wget implementation
 javacc5.jar:
 	curl https://cgi.di.uoa.gr/~compilers/tools/javacc5.jar --output javacc5.jar
 
