@@ -1,3 +1,5 @@
+package SymbolTable;
+
 import java.util.ArrayList;
 
 public final class SymbolTable {

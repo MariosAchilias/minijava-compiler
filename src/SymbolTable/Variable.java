@@ -1,3 +1,5 @@
+package SymbolTable;
+
 public class Variable extends Symbol {
     public String varType;
     public Variable(String type, String name) {

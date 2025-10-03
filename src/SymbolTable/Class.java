@@ -1,3 +1,5 @@
+package SymbolTable;
+
 import java.util.LinkedHashMap;
 
 public class Class extends Symbol {

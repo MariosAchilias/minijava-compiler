@@ -1,5 +1,7 @@
 import syntaxtree.*;
 import visitor.*;
+import SymbolTable.*;
+import SymbolTable.Class;
 
 import java.util.ArrayList;
 

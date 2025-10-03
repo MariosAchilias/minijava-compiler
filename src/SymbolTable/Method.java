@@ -1,3 +1,5 @@
+package SymbolTable;
+
 import java.util.ArrayList;
 
 public class Method extends Symbol{

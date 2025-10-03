@@ -12,4 +12,4 @@ compile: javacc5.jar jtb132di.jar
 	javac Main.java
 
 clean:
-	rm -rf *.class syntaxtree visitor minijava-jtb.jj *~
+	rm -rf *.class SymbolTable/*.class syntaxtree visitor minijava-jtb.jj *~ ParseException.java MiniJavaParser*.java JavaCharStream.java Token.java TokenMgrError.java
