@@ -292,7 +292,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         if (exprType.equals(leftHandSide.varType))
             return null;
 
-        if (!symbolTable.isSubclass(leftHandSide.varType, exprType))
+        if (!symbolTable.isSubclass(exprType, leftHandSide.varType))
                 throw new SemanticException("Assignment to variable of type " + leftHandSide.varType + " of expression of incompatible type " + exprType);
 
         return null;
