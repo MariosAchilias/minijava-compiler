@@ -16,8 +16,8 @@ jtb132di.jar
 
 # Files produced by JTB / JavaCC
 
-/MiniJavaSemanticAnalyzer/syntaxtree/*
-/MiniJavaSemanticAnalyzer/visitor/*
+/src/syntaxtree/*
+/src/visitor/*
 
 Lexer.java
 Parser.java

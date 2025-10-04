@@ -1,4 +1,5 @@
 ## TODO
+- [ ] refactor symbol table
 - [ ] LLVM IR emitter
 - [ ] run all stages
 - [ ] cleanup

@@ -8,7 +8,7 @@ public class Method extends Symbol{
     private final Scope<Variable> localVars;
     private final String className;
 
-    public Method(String returnType, String methodName, ArrayList<Variable> parameters, Scope classScope, String className) {
+    public Method(String returnType, String methodName, ArrayList<Variable> parameters, Scope<Variable> classScope, String className) {
         super(SymbolType.METHOD, methodName);
         this.returnType = returnType;
         this.className = className;
