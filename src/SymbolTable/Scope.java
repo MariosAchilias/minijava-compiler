@@ -32,17 +32,11 @@ public class Scope<T extends Symbol> {
         return null;
     }
 
-    public T getSymbolInnermost(String id) {
+    public T getLocalSymbol(String id) {
         return map.get(id);
     }
 
     public boolean addSymbol(String id, T symbol) {
         return map.put(id, symbol) == null;
-    }
-
-    public void prettyPrint() {
-        for (T s: map.values()) {
-            s.prettyPrint();
-        }
     }
 }

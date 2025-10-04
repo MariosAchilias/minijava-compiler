@@ -12,10 +12,10 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     }
 
     public String visit(MainClass n, String argu) throws Exception {
-        symbolTable.enterScope(symbolTable.getMainScope());
+        symbolTable.enterClassScope(symbolTable.main);
         /* f15 -> ( Statement() ) */
         n.f15.accept(this, argu);
-        symbolTable.exitLocalScope();
+        symbolTable.exitClassScope();
         return null;
     }
     /**
@@ -29,9 +29,9 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(ClassDeclaration n, String argu) throws Exception {
         String className = n.f1.accept(this, argu);
-        Class classSymbol = symbolTable.getClass(className);
+        Class class_ = symbolTable.getClass(className);
 
-        symbolTable.enterScope(classSymbol.getScope());
+        symbolTable.enterClassScope(class_);
         n.f4.accept(this, className);
         symbolTable.exitLocalScope();
 
@@ -60,9 +60,9 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(ClassExtendsDeclaration n, String argu) throws Exception {
         String className = n.f1.accept(this, argu);
-        Class classSymbol = symbolTable.getClass(className);
+        Class class_ = symbolTable.getClass(className);
 
-        symbolTable.enterScope(classSymbol.getScope());
+        symbolTable.enterClassScope(class_);
         n.f6.accept(this, className);
         symbolTable.exitLocalScope();
 
@@ -204,10 +204,10 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         }
 
         String id = n.f0.accept(this, argu);
-        Variable var = symbolTable.getLocal(id);
+        Variable var = symbolTable.getVar(id);
         if (var == null)
             throw new SemanticException("Identifier " + id + " not found in scope");
-        return symbolTable.getLocal(id).varType;
+        return symbolTable.getVar(id).varType;
     }
 
     public String visit(IntegerLiteral n, String argu) throws Exception {
@@ -284,7 +284,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(AssignmentStatement n, String argu) throws Exception {
         String id = n.f0.accept(this, argu);
-        Variable leftHandSide = symbolTable.getLocal(id);
+        Variable leftHandSide = symbolTable.getVar(id);
         if(leftHandSide == null)
             throw new SemanticException("Assignment to undefined variable " + id);
 
@@ -302,7 +302,7 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         if (!"int".equals(n.f2.accept(this, argu)))
             throw new SemanticException("Array assignment with non-integer expression as index");
 
-        Variable array = symbolTable.getLocal(n.f0.accept(this, argu));
+        Variable array = symbolTable.getVar(n.f0.accept(this, argu));
         if (array == null) {
             throw new SemanticException("Array assignment to variable that doesn't exist in scope: " + n.f0.accept(this, argu));
         }

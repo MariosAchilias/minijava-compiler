@@ -1,66 +1,70 @@
 package SymbolTable;
 
 import java.util.ArrayList;
-
+import java.util.LinkedHashMap;
 public final class SymbolTable {
-    private final Scope<Class> classesScope;
-    private final Scope<Method> methodScope;
-    private final Scope<Variable> mainScope;
-    private Scope<Variable> localScope;
+    private final LinkedHashMap<String, Class> classes;
+    public Class main;
+    private Scope<Method> localMethods;
+    private Scope<Variable> localVariables;
 
     public SymbolTable() {
-        classesScope = new Scope<Class>(null);
-        methodScope = new Scope<Method>(null);
-        mainScope = new Scope<Variable>(null);
-        localScope = null;
+        classes = new LinkedHashMap<String, Class>();
+        main = null;
+        localMethods = null;
+        localVariables = null;
+    }
+
+    public void enterClassScope(Class c) {
+        localVariables = c.getVariableScope();
+        localMethods = c.getMethodScope();
+    }
+
+    public void exitClassScope() {
+        localVariables = null;
+        localMethods = null;
     }
 
     public void enterScope(Scope<Variable> scope) {
-        localScope = scope;
+        localVariables = scope;
     }
 
     public void exitLocalScope() {
-        localScope = localScope.getParent();
+        localVariables = localVariables.getParent();
     }
 
-    public boolean addClass(String id, Class class_) {
-        return classesScope.addSymbol(id, class_);
+    public boolean addVariable(String id, Variable symbol) {
+        return localVariables.addSymbol(id, symbol);
     }
 
-    public Class getClass(String id) {
-        return classesScope.get(id);
+    public Variable getVar(String id) {
+        return localVariables.getSymbol(id);
     }
 
-    public boolean addLocal(String id, Variable symbol) {
-        return localScope.addSymbol(id, symbol);
-    }
-
-    public Variable getLocal(String id) {
-        return localScope.getSymbol(id);
-    }
-
-    public Variable getLocalInnermost(String id) { return localScope.getSymbolInnermost(id); }
-
-    public boolean addMethod(String id, String className, Method method) {
-        return methodScope.addSymbol(id + ";" + className, method);
-    }
-
-    public Method getMethodLocal(String id, String className) {
-        return methodScope.get(id + ";" + className);
-    }
+    public Variable getLocalVar(String id) { return localVariables.getLocalSymbol(id); }
 
     public Method getMethod(String id, String className) {
-        for (Class c = getClass(className); c != null; c = c.getParent()) {
-            Method method = getMethodLocal(id, c.id);
+        for (Class c = classes.get(className); c != null; c = c.getParent()) {
+            Method method = c.getMethod(id);
             if (method != null)
                 return method;
         }
         return null;
     }
 
+    public Class getClass(String name) {
+        return classes.get(name);
+    }
+
+    public Class newClass(String name, Class superClass) {
+        Class c = new Class(name, superClass);
+        classes.put(name, c);
+        return c;
+    }
+
     public boolean isSubclass(String derived, String base) {
-        for (Class c = getClass(derived); c != null; c = c.getParent()) {
-            if (base.equals(c.id))
+        for (Class c = classes.get(derived); c != null; c = c.getParent()) {
+            if (base.equals(c.name))
                 return true;
         }
         return false;
@@ -84,21 +88,9 @@ public final class SymbolTable {
         return true;
     }
 
-    public Scope<Method> getMethodScope() {
-        return methodScope;
-    }
-
-    public Scope<Variable> getMainScope() {
-        return mainScope;
-    }
-
-    public void prettyPrint() {
-        classesScope.prettyPrint();
-    }
-
     public void printOffsets() {
-        for (Class c: classesScope.getValues())
-            c.printOffsets(this);
+//        for (Class c: classes.values())
+//            c.printOffsets(this);
     }
 
 }
