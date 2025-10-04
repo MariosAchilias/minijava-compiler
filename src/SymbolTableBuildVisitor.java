@@ -31,9 +31,10 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(MainClass n, String argu) throws Exception {
-        symbolTable.main = new Class(n.f1.accept(this, null), null);
+        String className = n.f1.accept(this, null);
+        symbolTable.main = new Class(className, null);
         symbolTable.enterClassScope(symbolTable.main);
-        n.f14.accept(this, null);
+        n.f14.accept(this, className);
         symbolTable.exitClassScope();
 
         return null;
