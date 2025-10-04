@@ -14,6 +14,5 @@ compile: javacc5.jar jtb132di.jar
 	javac Main.java
 
 clean:
-	rm -rf *.class Parser/*.class SymbolTable/*.class
-	rm -rf Parser/syntaxtree Parser/visitor Parser/*.java Exceptions/ParseException.java
-	rm -rf *.class ParserParser/*.class SymbolTable/*.class syntaxtree visitor minijava-jtb.jj *~ ParseException.java MiniJavaParser*.java JavaCharStream.java Token.java TokenMgrError.java
+	rm `find -name "*.class"`
+	rm -rf Parser/syntaxtree Parser/visitor Parser/*.java Parser/minijava-jtb.jj Exceptions/ParseException.java
