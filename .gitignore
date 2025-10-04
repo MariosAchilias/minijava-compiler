@@ -10,14 +10,15 @@
 *.class
 *.xml
 
+launch.json
 
 javacc5.jar
 jtb132di.jar
 
 # Files produced by JTB / JavaCC
 
-/src/syntaxtree/*
-/src/visitor/*
+/src/Parser/syntaxtree/*
+/src/Parser/visitor/*
 
 Lexer.java
 Parser.java
