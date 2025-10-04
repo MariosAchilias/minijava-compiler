@@ -1,5 +1,6 @@
-import syntaxtree.*;
-import visitor.*;
+import Parser.syntaxtree.*;
+import Parser.visitor.*;
+import Exceptions.SemanticException;
 import SymbolTable.*;
 import SymbolTable.Class;
 

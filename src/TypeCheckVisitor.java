@@ -1,9 +1,11 @@
-import syntaxtree.*;
-import visitor.*;
+import Parser.syntaxtree.*;
+import Parser.visitor.*;
 import SymbolTable.*;
 import SymbolTable.Class;
 
 import java.util.ArrayList;
+
+import Exceptions.SemanticException;
 
 class TypeCheckVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;

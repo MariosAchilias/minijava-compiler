@@ -1,5 +1,9 @@
 import java.io.*;
-import syntaxtree.*;
+
+import Exceptions.ParseException;
+import Exceptions.SemanticException;
+import Parser.*;
+import Parser.syntaxtree.*;
 import SymbolTable.SymbolTable;
 
 class Main {

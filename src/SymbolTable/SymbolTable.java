@@ -1,7 +1,8 @@
 package SymbolTable;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import Exceptions.SemanticException;
+
 public final class SymbolTable {
     private final LinkedHashMap<String, Class> classes;
     public Class main;
@@ -52,8 +53,12 @@ public final class SymbolTable {
         return null;
     }
 
-    public Class getClass(String name) {
-        return classes.get(name);
+    public Class getClass(String name) throws Exception {
+        Class c = classes.get(name);
+        if (c != null)
+            return c;
+        
+        throw new SemanticException("Use of so far undefined class " + name);
     }
 
     public Class newClass(String name, Class superClass) {
@@ -81,7 +86,7 @@ public final class SymbolTable {
                 else continue;
             }
 
-            if (!isSubclass(paramType, testParamType))
+            if (!isSubclass(testParamType, paramType))
                 return false;
         }
 
