@@ -10,8 +10,4 @@ public class Variable extends Symbol {
     public static boolean isBuiltin(String type) {
         return type.equals("int") || type.equals("boolean") || type.equals("int[]") || type.equals("boolean[]");
     }
-
-    public void prettyPrint() {
-        System.out.println(varType + " " + id);
-    }
 }

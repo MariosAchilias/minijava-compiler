@@ -1,5 +1,6 @@
 package SymbolTable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 
 public final class SymbolTable {
@@ -54,6 +55,10 @@ public final class SymbolTable {
         return classes.get(name);
     }
 
+    public Collection<Class> getClasses() {
+        return classes.values();
+    }
+
     public Class newClass(String name, Class superClass) {
         Class c = new Class(name, superClass);
         classes.put(name, c);
@@ -85,10 +90,4 @@ public final class SymbolTable {
 
         return true;
     }
-
-    public void printOffsets() {
-       for (Class c: classes.values())
-           c.printOffsets(this);
-    }
-
 }

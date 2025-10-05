@@ -17,12 +17,4 @@ public class Method extends Symbol{
     public Scope<Variable> getLocalScope() {
         return localVars;
     }
-
-    public void prettyPrint() {
-        System.out.print(returnType + " " + id + " (");
-        for (Variable param: parameters) {
-            System.out.print(param.varType + ", ");
-        }
-        System.out.println(")");
-    }
 }

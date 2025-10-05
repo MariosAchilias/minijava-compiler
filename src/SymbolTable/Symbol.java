@@ -7,7 +7,4 @@ public class Symbol {
         this.type = type;
         this.id = id;
     }
-    public void prettyPrint() {
-        System.out.println(type.toString() + " " + id);
-    };
 }

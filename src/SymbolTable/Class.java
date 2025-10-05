@@ -1,6 +1,6 @@
 package SymbolTable;
 
-import java.util.LinkedHashMap;
+import java.util.Collection;
 
 public class Class {
     public final String name;
@@ -28,6 +28,13 @@ public class Class {
         return methods.get(name);
     }
 
+    public Collection<Method> getMethods () {
+        Collection<Method> res = methods.getValues();
+        for (Class c = this.superClass; c != null; c = c.superClass)
+            res.addAll(c.methods.getValues());
+        return res;
+    }
+
     public Method getMethod (String name) {
         for (Class c = this; c != null; c = c.superClass) {
             Method m = c.getLocalMethod(name);
@@ -46,49 +53,5 @@ public class Class {
     }
 
     public Variable getField(String id) {return fields.get(id);}
-
-    private int getFieldsOffset() {
-        int offset = superClass == null ? 0 : superClass.getFieldsOffset();
-        for (Variable f : fields.getValues()) {
-            switch (f.varType) {
-                case "int":
-                    offset += 4;
-                    break;
-                case "boolean":
-                    offset += 1;
-                    break;
-                default:
-                    offset += 8;
-            }
-        }
-        return offset;
-    }
-
-//    private int getMethodsOffset(SymbolTable symbolTable) {
-//        int offset = superClass == null ? 0 : superClass.getMethodsOffset(symbolTable);
-//        for (Method m: symbolTable.getMethodScope().getValues()) {
-//            if (m.getClassName().equals(id))
-//                offset += 8;
-//        }
-//        return offset;
-//    }
-
-   public void printOffsets(SymbolTable symbolTable) {
-       int offset = superClass == null ? 0 : superClass.getFieldsOffset();
-       for (Variable f : fields.getValues()) {
-           System.out.println(name + "." + f.id + " : " + offset);
-           switch (f.varType) {
-               case "int":
-                   offset += 4;
-                   break;
-               case "boolean":
-                   offset += 1;
-                   break;
-               default:
-                   offset += 8;
-           }
-       }
-       // TODO: add printing method offsets using vtable
-    }
 
 }

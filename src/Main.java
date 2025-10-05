@@ -17,13 +17,11 @@ class Main {
                 fout = new FileOutputStream(fileName.replace(".java", ".ll"));
                 MiniJavaParser parser = new MiniJavaParser(fis);
                 Goal root = parser.Goal();
-                System.out.println("Running semantic check on " + fileName);
 
                 SymbolTable symbolTable = new SymbolTable();
                 SymbolTableBuildVisitor populateSymbolTable = new SymbolTableBuildVisitor(symbolTable);
                 root.accept(populateSymbolTable, null);
 
-                symbolTable.printOffsets();
                 TypeCheckVisitor typeCheck = new TypeCheckVisitor(symbolTable);
                 root.accept(typeCheck, null);
 

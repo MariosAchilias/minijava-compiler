@@ -10,6 +10,14 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         this.symbolTable = symbolTable;
         this.emitter = emitter;
     }
+
+    @Override
+    public String visit(Goal n, String argu) throws Exception {
+        emitter.emitVTables(symbolTable);
+        emitter.emitHelpers();
+        n.f0.accept(this, null);
+        return null;
+    }
     /**
      * f0 -> "class"
      * f1 -> Identifier()
