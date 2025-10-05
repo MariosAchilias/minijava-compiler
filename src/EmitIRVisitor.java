@@ -1,14 +1,14 @@
 import Parser.syntaxtree.*;
 import Parser.visitor.*;
-import Exceptions.SemanticException;
 import SymbolTable.*;
-import SymbolTable.Class;
 import Emitter.*;
 
-class EmittIrVisitor extends GJDepthFirst<String, String>{
+class EmitIRVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
-    public EmitIrVisitor(SymbolTable symbolTable) {
+    Emitter emitter;
+    public EmitIRVisitor(SymbolTable symbolTable, Emitter emitter) {
         this.symbolTable = symbolTable;
+        this.emitter = emitter;
     }
     /**
      * f0 -> "class"

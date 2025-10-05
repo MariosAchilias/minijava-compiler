@@ -47,17 +47,6 @@ public class Class {
 
     public Variable getField(String id) {return fields.get(id);}
 
-//    public void prettyPrint(SymbolTable symbolTable) {
-//        System.out.println("Class: " + id);
-//        System.out.println("Fields: ");
-//        fields.prettyPrint();
-//        System.out.println("Methods: ");
-//        for (Method m: symbolTable.getMethodScope().getValues()) {
-//            if (m.getClassName().equals(id))
-//                m.prettyPrint();
-//        }
-//    }
-
     private int getFieldsOffset() {
         int offset = superClass == null ? 0 : superClass.getFieldsOffset();
         for (Variable f : fields.getValues()) {
@@ -84,29 +73,22 @@ public class Class {
 //        return offset;
 //    }
 
-//    public void printOffsets(SymbolTable symbolTable) {
-        // TODO. proper offsets for overriden methods
-//        int offset = superClass == null ? 0 : superClass.getFieldsOffset();
-//        for (Variable f : fields.getValues()) {
-//            System.out.println(name + "." + f.id + " : " + offset);
-//            switch (f.varType) {
-//                case "int":
-//                    offset += 4;
-//                    break;
-//                case "boolean":
-//                    offset += 1;
-//                    break;
-//                default:
-//                    offset += 8;
-//            }
-//        }
-//        offset = superClass == null ? 0 : superClass.getMethodsOffset(symbolTable);
-//        for (Method m : symbolTable.getMethodScope().getValues()) {
-//            if (!m.getClassName().equals(id))
-//                continue;
-//            System.out.println(id + "." + m.id + " : " + offset);
-//            offset += 8;
-//        }
-//    }
+   public void printOffsets(SymbolTable symbolTable) {
+       int offset = superClass == null ? 0 : superClass.getFieldsOffset();
+       for (Variable f : fields.getValues()) {
+           System.out.println(name + "." + f.id + " : " + offset);
+           switch (f.varType) {
+               case "int":
+                   offset += 4;
+                   break;
+               case "boolean":
+                   offset += 1;
+                   break;
+               default:
+                   offset += 8;
+           }
+       }
+       // TODO: add printing method offsets using vtable
+    }
 
 }

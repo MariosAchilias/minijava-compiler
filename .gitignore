@@ -15,6 +15,8 @@ launch.json
 javacc5.jar
 jtb132di.jar
 
+minijava-examples-new/*
+
 # Files produced by JTB / JavaCC
 
 /src/Parser/syntaxtree/*

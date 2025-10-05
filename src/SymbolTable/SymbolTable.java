@@ -5,24 +5,20 @@ import java.util.LinkedHashMap;
 public final class SymbolTable {
     private final LinkedHashMap<String, Class> classes;
     public Class main;
-    private Scope<Method> localMethods;
     private Scope<Variable> localVariables;
 
     public SymbolTable() {
         classes = new LinkedHashMap<String, Class>();
         main = null;
-        localMethods = null;
         localVariables = null;
     }
 
     public void enterClassScope(Class c) {
         localVariables = c.getVariableScope();
-        localMethods = c.getMethodScope();
     }
 
     public void exitClassScope() {
         localVariables = null;
-        localMethods = null;
     }
 
     public void enterScope(Scope<Variable> scope) {
@@ -91,8 +87,8 @@ public final class SymbolTable {
     }
 
     public void printOffsets() {
-//        for (Class c: classes.values())
-//            c.printOffsets(this);
+       for (Class c: classes.values())
+           c.printOffsets(this);
     }
 
 }
