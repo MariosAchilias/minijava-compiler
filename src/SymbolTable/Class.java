@@ -1,6 +1,6 @@
 package SymbolTable;
 
-import java.util.Collection;
+import java.util.ArrayList;
 
 public class Class {
     public final String name;
@@ -28,11 +28,8 @@ public class Class {
         return methods.get(name);
     }
 
-    public Collection<Method> getMethods () {
-        Collection<Method> res = methods.getValues();
-        for (Class c = this.superClass; c != null; c = c.superClass)
-            res.addAll(c.methods.getValues());
-        return res;
+    public ArrayList<Method> getMethods () {
+        return methods.getValues();
     }
 
     public Method getMethod (String name) {
@@ -53,5 +50,16 @@ public class Class {
     }
 
     public Variable getField(String id) {return fields.get(id);}
+
+    public int getSize() {
+        int size = superClass != null ? superClass.getSize() : 0;
+        size += fields.getValues().size();
+        for (Method m: methods.getValues()) {
+            boolean isOverride = (this.getLocalMethod(m.id) != null) && (superClass.getMethod(m.id) != null);
+            if (!isOverride)
+                size += 8;
+        }
+        return size;
+    }
 
 }

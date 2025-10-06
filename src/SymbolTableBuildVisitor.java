@@ -164,6 +164,9 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
         symbolTable.exitLocalScope();
 
         Class parent = symbolTable.getClass(className).getParent();
+        if (parent == null)
+            return null;
+            
         Method toOverride = parent.getMethod(name);
         if (toOverride == null)
             return null;

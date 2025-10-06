@@ -1,6 +1,8 @@
 package SymbolTable;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 public class Scope<T extends Symbol> {
     private final Scope<T> parent;
@@ -19,8 +21,8 @@ public class Scope<T extends Symbol> {
         return parent;
     }
 
-    public java.util.Collection<T> getValues() {
-        return map.values();
+    public ArrayList<T> getValues() {
+        return new ArrayList<T>(map.values());
     }
 
     public T getSymbol(String id) {

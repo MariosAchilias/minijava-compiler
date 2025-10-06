@@ -1,12 +1,15 @@
 package Emitter;
 
 import java.io.*;
+import java.util.LinkedHashMap;
+
 import SymbolTable.*;
 import SymbolTable.Class;
 
 public class Emitter {
     FileOutputStream outFile;
     int registerCount;
+    LinkedHashMap<String, String> variableToRegister;
     public Emitter(FileOutputStream outFile) {
         this.outFile = outFile;
         registerCount = 0;
@@ -16,38 +19,46 @@ public class Emitter {
         return "%_" + registerCount++;
     }
 
+    public void declareVar(String type, String name) {
+        // TODO: create register, insert into variableToRegister and emit declaration
+    }
+
     private int buildMethodDecls(Class c, StringBuilder methodDecls) {
         if (c == null)
             return 0;
 
-    
+        int cnt = buildMethodDecls(c.getParent(), methodDecls);
 
-        int ret = buildMethodDecls(c.getParent(), methodDecls);
-
-        // TODO: use a vtable object instead
-        // for (Method m : c.getMethods()) {
-        //     boolean isOverride = (c.getLocalMethod(m.id) != null) && (c.getParent().getMethod(m.id) != null);
-        //     if (isOverride)
-        //         continue;
+        for (Method m : c.getMethods()) {
+            boolean isOverride = c.getParent() == null
+                                ? false
+                                : (c.getLocalMethod(m.id) != null) && (c.getParent().getMethod(m.id) != null);
+            if (isOverride)
+                continue;
             
-        //     ret += 1;
+            cnt += 1;
 
-        // }
+            var args = new StringBuilder();
+            for (Variable a : m.parameters)
+                args.append(String.format(", %s", typeToLLVM(a.varType)));
+
+            // All methods have a 'this' pointer as their first argument
+            String signature = String.format("%s (i8*%s)", typeToLLVM(m.returnType), args.toString()); 
+            String decl = String.format("i8* bitcast (%s* @%s to i8*)", signature, m.id);
+            if (methodDecls.length() > 0) methodDecls.append(", ");
+            methodDecls.append(decl);
+        }
         
-        // methodDecls.append(String.format("allmethodsof(%s)", c.name));
-        return ret;
-    }
-
-    private void emitVTable(Class c) throws IOException {
-        StringBuilder methodDecls = new StringBuilder();
-        int methodCount = buildMethodDecls(c, methodDecls);
-        outFile.write(String.format("@.%s_vtable = global [%d x i8*] [%s]\n", c.name, methodCount, methodDecls.toString()).getBytes());
+        return cnt;
     }
 
     public void emitVTables(SymbolTable st) throws IOException {
         outFile.write(String.format("@.%s_vtable = global [0 x i8*] []\n", st.main.name).getBytes());
-        for (Class c : st.getClasses())
-            emitVTable(c);
+        for (Class c : st.getClasses()) {
+            StringBuilder methodDecls = new StringBuilder();
+            int methodCount = buildMethodDecls(c, methodDecls);
+            outFile.write(String.format("@.%s_vtable = global [%d x i8*] [%s]\n", c.name, methodCount, methodDecls.toString()).getBytes());
+        }
     }
 
     public void emitHelpers() throws IOException {
@@ -70,4 +81,12 @@ public class Emitter {
                         "    ret void\n" + //
                         "}").getBytes());
     };
+
+    private static String typeToLLVM(String type) {
+        switch (type) {
+            case "int":       return "i32";
+            case "boolean":   return "i1"; 
+            default:          return "i8*";
+        }
+    }
 }
