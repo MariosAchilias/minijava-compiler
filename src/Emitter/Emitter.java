@@ -6,13 +6,15 @@ import java.util.LinkedHashMap;
 import SymbolTable.*;
 import SymbolTable.Class;
 
+final class Vtable extends LinkedHashMap<String, Integer> {}; // method name -> offset
+
 public class Emitter {
     FileOutputStream outFile;
-    int registerCount;
-    LinkedHashMap<String, String> variableToRegister;
+    int registerCount = 0;
+    LinkedHashMap<String, String> variableToRegister = new LinkedHashMap<>();
+    LinkedHashMap<String, Vtable> classToVtable =  new LinkedHashMap<>();
     public Emitter(FileOutputStream outFile) {
         this.outFile = outFile;
-        registerCount = 0;
     }
 
     public String newRegister () {
@@ -23,11 +25,11 @@ public class Emitter {
         // TODO: create register, insert into variableToRegister and emit declaration
     }
 
-    private int buildMethodDecls(Class c, StringBuilder methodDecls) {
+    private int buildMethodDecls(Class c, StringBuilder methodDecls, Vtable vtable) {
         if (c == null)
             return 0;
 
-        int cnt = buildMethodDecls(c.getParent(), methodDecls);
+        int cnt = buildMethodDecls(c.getParent(), methodDecls, vtable);
 
         for (Method m : c.getMethods()) {
             boolean isOverride = c.getParent() == null
@@ -36,7 +38,7 @@ public class Emitter {
             if (isOverride)
                 continue;
             
-            cnt += 1;
+            vtable.put(m.id, cnt++);
 
             var args = new StringBuilder();
             for (Variable a : m.parameters)
@@ -56,7 +58,9 @@ public class Emitter {
         outFile.write(String.format("@.%s_vtable = global [0 x i8*] []\n", st.main.name).getBytes());
         for (Class c : st.getClasses()) {
             StringBuilder methodDecls = new StringBuilder();
-            int methodCount = buildMethodDecls(c, methodDecls);
+            var vt = new Vtable();
+            int methodCount = buildMethodDecls(c, methodDecls, vt);
+            classToVtable.put(c.name, vt);
             outFile.write(String.format("@.%s_vtable = global [%d x i8*] [%s]\n", c.name, methodCount, methodDecls.toString()).getBytes());
         }
     }
