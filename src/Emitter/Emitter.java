@@ -59,6 +59,18 @@ public class Emitter {
         indentation--;
     }
 
+    public String emitBinaryOperation(String operator, String leftOperand, String rightOperand) throws IOException {
+        String reg = newRegister();
+        if (operator.equals("slt")) {
+            emitLine(String.format("%s = icmp slt i32 %s, %s", reg, leftOperand, rightOperand));
+            return reg;
+        }
+
+        String type = "and".equals(operator) ? "i1" : "i32";
+        emitLine(String.format("%s = %s %s %s, %s", reg, operator, typeToLLVM(type), leftOperand, rightOperand));
+        return reg;
+    }
+
     public String emitLvalueAddressOf(String id) {
         // Return register containing address of lvalue
         String reg = variableToRegister.get(id);

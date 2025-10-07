@@ -133,7 +133,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         return null;
     }
 
-    // Leaf nodes
+    // Non-trivial leaf nodes
 
     @Override
     public String visit(Identifier n, String returnReg) {
@@ -149,33 +149,109 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         return emitter.emitLvalueAddressOf(id);
     }
 
-    // Trivial visitors
-
     @Override
-    public String visit(PrimaryExpression n, String returnReg) throws Exception {
-        return n.f0.accept(this, returnReg);
+    public String visit(ThisExpression n, String argu) throws Exception {
+        return null; // TODO
     }
 
-    /* f0 -> AndExpression()
- *       | CompareExpression()
- *       | PlusExpression()
- *       | MinusExpression()
- *       | TimesExpression()
- *       | ArrayLookup()
- *       | ArrayLength()
- *       | MessageSend()
- *       | Clause()
-*/
     @Override
-    public String visit(Expression n, String returnReg) throws Exception {
+    public String visit(ArrayAllocationExpression n, String argu) throws Exception {
+        return null; // TODO
+    }
+
+    @Override
+    public String visit(AllocationExpression n, String argu) throws Exception {
+        return null; // TODO
+    }
+
+    // Expressions
+    
+    @Override
+    public String visit(PlusExpression n, String argu) throws Exception {
+        String first = n.f0.accept(this, "returnReg");
+        String second = n.f2.accept(this, "returnReg");
+        return emitter.emitBinaryOperation("add", first, second);
+    }
+
+    @Override
+    public String visit(MinusExpression n, String argu) throws Exception {
+        String first = n.f0.accept(this, "returnReg");
+        String second = n.f2.accept(this, "returnReg");
+        return emitter.emitBinaryOperation("add", first, second);
+    }
+
+    @Override
+    public String visit(TimesExpression n, String argu) throws Exception {
+        String first = n.f0.accept(this, null);
+        String second = n.f2.accept(this, null);
+        return emitter.emitBinaryOperation("mul", first, second);
+    }
+
+    @Override
+    public String visit(AndExpression n, String argu) throws Exception {
+        String first = n.f0.accept(this, null);
+        String second = n.f2.accept(this, null);
+        return emitter.emitBinaryOperation("and", first, second);
+    }
+
+    @Override
+    public String visit(CompareExpression n, String argu) throws Exception {
+        String first = n.f0.accept(this, null);
+        String second = n.f2.accept(this, null);
+        return emitter.emitBinaryOperation("slt", first, second);
+    }
+
+    // Array related methods
+
+    @Override
+    public String visit(ArrayLookup n, String argu) throws Exception {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public String visit(ArrayLength n, String argu) throws Exception {
+        // TODO
+        // this one needs some thinking, maybe store array lengths somewhere (will also be used for bounds checking)
+        return null;
+    }
+
+    // Trivial methods
+
+    @Override
+    public String visit(PrimaryExpression n, String argu) throws Exception {
+        return n.f0.accept(this, "returnReg");
+    }
+
+    @Override
+    public String visit(Expression n, String argu) throws Exception {
         // Used for rvalues, returns register that contains the result of the expression evaluation
-        return n.f0.accept(this, returnReg);
+        return n.f0.accept(this, null);
     }
 
     @Override
-    public String visit(Clause n, String returnReg) throws Exception {
-        return n.f0.accept(this, returnReg);
+    public String visit(Clause n, String argu) throws Exception {
+        return n.f0.accept(this, null);
     }
 
+    @Override
+    public String visit(IntegerLiteral n, String argu) throws Exception {
+        return n.f0.toString();
+    }
+
+    @Override
+    public String visit(TrueLiteral n, String argu) throws Exception {
+        return n.f0.toString();
+    }
+
+    @Override
+    public String visit(FalseLiteral n, String argu) throws Exception {
+        return n.f0.toString();
+    }
+
+    @Override
+    public String visit(BracketExpression n, String argu) throws Exception {
+        return n.f1.accept(this, null);
+    }
 
 }
