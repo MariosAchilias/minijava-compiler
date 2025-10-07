@@ -1,11 +1,10 @@
-import java.io.*;
-
+import Emitter.*;
 import Exceptions.ParseException;
 import Exceptions.SemanticException;
 import Parser.*;
 import Parser.syntaxtree.*;
 import SymbolTable.SymbolTable;
-import Emitter.*;
+import java.io.*;
 
 class Main {
     public static void main (String [] args) throws Exception{
@@ -25,7 +24,7 @@ class Main {
                 TypeCheckVisitor typeCheck = new TypeCheckVisitor(symbolTable);
                 root.accept(typeCheck, null);
 
-                Emitter emitter = new Emitter(fout);
+                Emitter emitter = new Emitter(fout, symbolTable);
                 EmitIRVisitor emitIR = new EmitIRVisitor(symbolTable, emitter);
                 root.accept(emitIR, null);
 

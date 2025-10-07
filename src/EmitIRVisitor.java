@@ -13,7 +13,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
 
     @Override
     public String visit(Goal n, String argu) throws Exception {
-        emitter.emitVTables(symbolTable);
+        emitter.emitVTables();
         emitter.emitHelpers();
         n.f0.accept(this, null);
         n.f1.accept(this, null);
@@ -41,9 +41,9 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(MainClass n, String argu) throws Exception {
-        emitter.methodDefinitionStart(new Method ("int", "main", null, null));
+        emitter.emitMethodStart(new Method ("int", "main", null, null));
 
-        emitter.methodDefinitionEnd();
+        emitter.emitMethodEnd();
         return null;
     }
 
@@ -74,15 +74,32 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(ClassExtendsDeclaration n, String argu) throws Exception {
+        String className = n.f1.accept(this, null);
+        n.f4.accept(this, className);
         return null;
     }
 
     /**
-     * f0 -> Type()
-     * f1 -> Identifier()
-     * f2 -> ";"
+     * f0 -> Identifier()
+     * f1 -> "="
+     * f2 -> Expression()
+     * f3 -> ";"
      */
-    public String visit(VarDeclaration n, String argu) throws Exception {
+    @Override
+    public String visit(AssignmentStatement n, String argu) throws Exception {
+        // Evil ugly hack -- passing null to Identifier visitor will make it return name
+        // otherwise, returns a register with lvalue address
+        // this is ugly, but no obvious solution comes to me
+        // TODO: refactor 
+
+        String type = symbolTable.getVar(n.f0.accept(this, null)).varType;
+        
+        String lhs = n.f0.accept(this, "true");
+        String rhs = n.f2.accept(this, "true");
+        // lhs is register that contains memory location of lvalue
+        // rhs is register that contains value
+        emitter.emitAssignment(type, lhs, rhs);
+
         return null;
     }
 
@@ -105,44 +122,60 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     public String visit(MethodDeclaration n, String className) throws Exception {
         String methodName = n.f2.accept(this, null);
         Method m = symbolTable.getMethod(methodName, className);
-        emitter.methodDefinitionStart(m);
-        // TODO
-        emitter.methodDefinitionEnd();
+        emitter.emitMethodStart(m);
+        symbolTable.enterScope(m.getLocalScope());
+
+        n.f8.accept(this, null);
+        // TODO return expression
+
+        emitter.emitMethodEnd();
+
         return null;
     }
 
-    /**
-     * f0 -> Type()
-     * f1 -> Identifier()
-     */
-    @Override
-    public String visit(FormalParameter n, String argu) throws Exception {
-        return null;
-    }
-
-
-    public String visit(ArrayType n, String argu) throws Exception {
-        return n.f0.accept(this, null);
-    }
-
-    public String visit(BooleanArrayType n, String argu) {
-        return "boolean[]";
-    }
-
-    public String visit(IntegerArrayType n, String argu) {
-        return "int[]";
-    }
-
-    public String visit(BooleanType n, String argu) {
-        return "boolean";
-    }
-
-    public String visit(IntegerType n, String argu) {
-        return "int";
-    }
+    // Leaf nodes
 
     @Override
-    public String visit(Identifier n, String argu) {
-        return n.f0.toString();
+    public String visit(Identifier n, String returnReg) {
+        String id = n.f0.toString();
+        if (returnReg == null)
+            return id;
+
+        // Evil hack (TODO: maybe refactor)
+        // if null is passed as argument, return identifier text
+        // otherwise we use this for lvalue assignment
+
+        // Used for lvalues, returns register that contains a pointer to the value
+        return emitter.emitLvalueAddressOf(id);
     }
+
+    // Trivial visitors
+
+    @Override
+    public String visit(PrimaryExpression n, String returnReg) throws Exception {
+        return n.f0.accept(this, returnReg);
+    }
+
+    /* f0 -> AndExpression()
+ *       | CompareExpression()
+ *       | PlusExpression()
+ *       | MinusExpression()
+ *       | TimesExpression()
+ *       | ArrayLookup()
+ *       | ArrayLength()
+ *       | MessageSend()
+ *       | Clause()
+*/
+    @Override
+    public String visit(Expression n, String returnReg) throws Exception {
+        // Used for rvalues, returns register that contains the result of the expression evaluation
+        return n.f0.accept(this, returnReg);
+    }
+
+    @Override
+    public String visit(Clause n, String returnReg) throws Exception {
+        return n.f0.accept(this, returnReg);
+    }
+
+
 }

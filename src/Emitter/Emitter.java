@@ -11,18 +11,16 @@ public class Emitter {
     FileOutputStream outFile;
     int registerCount = 0;
     int indentation = 0;
+    SymbolTable symbolTable;
     LinkedHashMap<String, String> variableToRegister = null;
     LinkedHashMap<String, Vtable> classToVtable =  new LinkedHashMap<>();
-    public Emitter(FileOutputStream outFile) {
+    public Emitter(FileOutputStream outFile, SymbolTable symbolTable) {
         this.outFile = outFile;
+        this.symbolTable = symbolTable;
     }
 
     public String newRegister () {
         return "%_" + registerCount++;
-    }
-
-    public void declareVar(String type, String name) {
-        // TODO: create register, insert into variableToRegister and emit declaration
     }
 
     private void emitLine(String line) throws IOException {
@@ -30,7 +28,7 @@ public class Emitter {
         outFile.write(s.getBytes());
     }
 
-    public void methodDefinitionStart(Method m) throws IOException {
+    public void emitMethodStart(Method m) throws IOException {
         var args = new StringBuilder();
         for (Variable a : m.parameters) {
             args.append(String.format(", %s %%%s", typeToLLVM(a.varType), a.id));
@@ -42,26 +40,44 @@ public class Emitter {
         indentation++;
         variableToRegister = new LinkedHashMap<>();
 
-        // Allocate parameters
-        for (Variable a : m.parameters) {
+        // Allocate parameters & local variables
+        for (Variable a : m.getLocalScope().getValues()) {
             String type = typeToLLVM(a.varType);
             String reg = newRegister();
             variableToRegister.put(a.id, reg);
             emitLine(String.format("%s = alloca %s", reg, type));
-            emitLine(String.format("store %s %s, %s* %s\n", type, "%" + a.id, type, reg));
+            // For parameters, initialize to given values
+            if (m.parameters.contains(a))
+                emitLine(String.format("store %s %s, %s* %s\n", type, "%" + a.id, type, reg));
         }
 
     }
 
-    public void methodDefinitionEnd() throws IOException {
+    public void emitMethodEnd() throws IOException {
         outFile.write("}\n".getBytes());
         variableToRegister = null;
         indentation--;
     }
 
-    public void emitVTables(SymbolTable st) throws IOException {
-        outFile.write(String.format("@.%s_vtable = global [0 x i8*] []\n", st.main.name).getBytes());
-        for (Class c : st.getClasses()) {
+    public String emitLvalueAddressOf(String id) {
+        // Return register containing address of lvalue
+        String reg = variableToRegister.get(id);
+        if (reg != null)
+            // Is a local variable or parameter
+            return reg;
+                
+        // Is an instance variable, must get offset in this object (TODO)
+        // also need to handle array writes
+        return null;
+    }
+
+    public void emitAssignment(String type, String lhs_reg, String value_reg) throws IOException {
+        emitLine(String.format("store %s %s, %s* %s\n", typeToLLVM(type), value_reg, typeToLLVM(type), lhs_reg));
+    }
+
+    public void emitVTables() throws IOException {
+        outFile.write(String.format("@.%s_vtable = global [0 x i8*] []\n", symbolTable.main.name).getBytes());
+        for (Class c : symbolTable.getClasses()) {
             StringBuilder methodDecls = new StringBuilder();
             var vt = new Vtable();
             int methodCount = buildMethodDecls(c, methodDecls, vt);

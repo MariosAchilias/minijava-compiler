@@ -1,11 +1,9 @@
+import Exceptions.SemanticException;
 import Parser.syntaxtree.*;
 import Parser.visitor.*;
 import SymbolTable.*;
 import SymbolTable.Class;
-
 import java.util.ArrayList;
-
-import Exceptions.SemanticException;
 
 class TypeCheckVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
@@ -438,7 +436,8 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     public String visit(IntegerType n, String argu) {
         return "int";
     }
-
+    
+    @Override
     public String visit(Identifier n, String argu) {
         return n.f0.toString();
     }
