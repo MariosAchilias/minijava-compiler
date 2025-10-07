@@ -1,7 +1,7 @@
+import Emitter.*;
 import Parser.syntaxtree.*;
 import Parser.visitor.*;
 import SymbolTable.*;
-import Emitter.*;
 
 class EmitIRVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
@@ -16,6 +16,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         emitter.emitVTables(symbolTable);
         emitter.emitHelpers();
         n.f0.accept(this, null);
+        n.f1.accept(this, null);
         return null;
     }
     /**
@@ -40,6 +41,9 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(MainClass n, String argu) throws Exception {
+        emitter.methodDefinitionStart(new Method ("int", "main", null, null));
+
+        emitter.methodDefinitionEnd();
         return null;
     }
 
@@ -53,6 +57,8 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(ClassDeclaration n, String argu) throws Exception {
+        String className = n.f1.accept(this, null);
+        n.f4.accept(this, className);
         return null;
     }
 
@@ -97,6 +103,11 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(MethodDeclaration n, String className) throws Exception {
+        String methodName = n.f2.accept(this, null);
+        Method m = symbolTable.getMethod(methodName, className);
+        emitter.methodDefinitionStart(m);
+        // TODO
+        emitter.methodDefinitionEnd();
         return null;
     }
 
