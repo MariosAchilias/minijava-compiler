@@ -2,13 +2,18 @@ import Emitter.*;
 import Parser.syntaxtree.*;
 import Parser.visitor.*;
 import SymbolTable.*;
+import SymbolTable.Class;
+import java.util.ArrayList;
 
 class EmitIRVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
     Emitter emitter;
+    Class currentClass;
+
     public EmitIRVisitor(SymbolTable symbolTable, Emitter emitter) {
         this.symbolTable = symbolTable;
         this.emitter = emitter;
+        currentClass = null;
     }
 
     @Override
@@ -41,7 +46,8 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(MainClass n, String argu) throws Exception {
-        Method m = new Method ("void", "main", null, null);
+        currentClass = symbolTable.main;
+        Method m = new Method ("void", "main", new ArrayList<>(), null);
         emitter.emitMethodStart(m);
         n.f15.accept(this, null);
         emitter.emitMethodEnd(m, "");
@@ -59,6 +65,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(ClassDeclaration n, String argu) throws Exception {
         String className = n.f1.accept(this, null);
+        currentClass = symbolTable.getClass(className);
         n.f4.accept(this, className);
         return null;
     }
@@ -76,6 +83,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(ClassExtendsDeclaration n, String argu) throws Exception {
         String className = n.f1.accept(this, null);
+        currentClass = symbolTable.getClass(className);
         n.f4.accept(this, className);
         return null;
     }
@@ -88,15 +96,13 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(AssignmentStatement n, String argu) throws Exception {
-        // Evil ugly hack -- passing null to Identifier visitor will make it return name
-        // otherwise, returns a register with lvalue address
-        // this is ugly, but no obvious solution comes to me
-        // TODO: refactor 
-
-        String type = symbolTable.getVar(n.f0.accept(this, null)).varType;
         
-        String lhs = n.f0.accept(this, "true");
-        String rhs = n.f2.accept(this, "true");
+        String id = n.f0.accept(this, null);
+        String type = symbolTable.getVar(id).varType;
+        
+        String lhs = emitter.emitLvalueAddressOf(currentClass, id);
+        String rhs = n.f2.accept(this, null);
+
         // lhs is register that contains memory location of lvalue
         // rhs is register that contains value
         emitter.emitAssignment(type, lhs, rhs);
@@ -143,17 +149,8 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     // Non-trivial leaf nodes
 
     @Override
-    public String visit(Identifier n, String returnReg) {
-        String id = n.f0.toString();
-        if (returnReg == null)
-            return id;
-
-        // Evil hack (TODO: maybe refactor)
-        // if null is passed as argument, return identifier text
-        // otherwise we use this for lvalue assignment
-
-        // Used for lvalues, returns register that contains a pointer to the value
-        return emitter.emitLvalueAddressOf(id);
+    public String visit(Identifier n, String argu) throws Exception {
+        return n.f0.toString();
     }
 
     @Override
@@ -175,15 +172,15 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     
     @Override
     public String visit(PlusExpression n, String argu) throws Exception {
-        String first = n.f0.accept(this, "returnReg");
-        String second = n.f2.accept(this, "returnReg");
+        String first = n.f0.accept(this, null);
+        String second = n.f2.accept(this, null);
         return emitter.emitBinaryOperation("add", first, second);
     }
 
     @Override
     public String visit(MinusExpression n, String argu) throws Exception {
-        String first = n.f0.accept(this, "returnReg");
-        String second = n.f2.accept(this, "returnReg");
+        String first = n.f0.accept(this, null);
+        String second = n.f2.accept(this, null);
         return emitter.emitBinaryOperation("add", first, second);
     }
 
@@ -223,13 +220,26 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         return null;
     }
 
-    // Trivial methods
-
+        /**
+     * Grammar production:
+     * f0 -> IntegerLiteral()
+     *       | TrueLiteral()
+     *       | FalseLiteral()
+     *       | Identifier()
+     *       | ThisExpression()
+     *       | ArrayAllocationExpression()
+     *       | AllocationExpression()
+     *       | BracketExpression()
+     */
     @Override
     public String visit(PrimaryExpression n, String argu) throws Exception {
-        return n.f0.accept(this, "returnReg");
+        if (n.f0.which != 3) // Not identifier
+            return n.f0.accept(this, null);
+
+        return emitter.emitRvalue(currentClass, n.f0.accept(this, null));
     }
 
+    // Trivial methods
     @Override
     public String visit(Expression n, String argu) throws Exception {
         // Used for rvalues, returns register that contains the result of the expression evaluation

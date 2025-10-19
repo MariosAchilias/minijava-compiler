@@ -15,6 +15,21 @@ public class Class {
         this.fields = new Scope<Variable>(superClass == null ? null : superClass.getVariableScope());
     }
 
+    public int getOffset(String field) {
+        // First 8 bytes in memory are Vtable pointer
+        int offset = superClass == null ? 8 : superClass.getOffset(field);
+        if (offset != -1)
+            return offset;
+        
+        for (Variable v: fields.getValues()) {
+            if (v.id.equals(field))
+                return offset;
+
+            offset += sizeOf(v.varType);
+        }
+        return -1;
+    }
+
     public Scope<Variable> getVariableScope() {
         return fields;
     }
@@ -60,6 +75,16 @@ public class Class {
                 size += 8;
         }
         return size;
+    }
+
+    private static int sizeOf(String type) {
+        return switch(type) {
+            case "int"      -> 4;
+            case "boolean"  -> 1;
+            case "int[]"    -> 8;
+            case "boolean[]"-> 8;
+            default         -> -1;
+        };
     }
 
 }

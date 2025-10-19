@@ -72,16 +72,49 @@ public class Emitter {
         return reg;
     }
 
-    public String emitLvalueAddressOf(String id) {
+    public String emitLvalueAddressOf(Class class_, String id) throws Exception {
         // Return register containing address of lvalue
         String reg = variableToRegister.get(id);
         if (reg != null)
             // Is a local variable or parameter
             return reg;
                 
-        // Is an instance variable, must get offset in this object (TODO)
-        // also need to handle array writes
-        return null;
+        // Is instance variable
+        reg = newRegister();
+        emitLine(String.format("%s = getelementptr i8, i8* %%this, i32 %d", reg, class_.getOffset(id)));
+        String type = class_.getField(id).varType;
+        
+        String ret = newRegister();
+        emitLine(String.format("%s = bitcast i8* %s to %s*", ret, reg, typeToLLVM(type)));
+
+        // TODO: array assignment
+        return ret;
+    }
+
+    public String emitRvalue(Class class_, String id) throws Exception {
+        // Return register containing value
+        String reg = variableToRegister.get(id);
+        if (reg != null) {
+            // Is a local variable or parameter
+            String type = typeToLLVM(symbolTable.getLocalVar(id).varType);
+            String ret = newRegister();
+            emitLine(String.format("%s = load %s, %s* %s", ret, type, type, reg));
+            return ret;
+        }
+                
+        // Is instance variable
+        String tmp = newRegister();
+        emitLine(String.format("%s = getelementptr i8, i8* %%this, i32 %d", tmp, class_.getOffset(id)));
+        String type = typeToLLVM(class_.getField(id).varType);
+        
+        String tmp_ = newRegister();
+        emitLine(String.format("%s = bitcast i8* %s to %s*", tmp_, tmp, type));
+
+        String ret = newRegister();
+        emitLine(String.format("%s = load %s, %s* %s", ret, type, type, tmp_));
+        // TODO: array elements
+
+        return ret;
     }
 
     public void emitAssignment(String type, String lhs_reg, String value_reg) throws IOException {
