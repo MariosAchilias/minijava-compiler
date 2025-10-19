@@ -53,7 +53,10 @@ public class Emitter {
 
     }
 
-    public void emitMethodEnd() throws IOException {
+    public void emitMethodEnd(Method m) throws IOException {
+        if (m.returnType.equals("void")) {
+            emitLine("ret void");
+        }
         outFile.write("}\n".getBytes());
         variableToRegister = null;
         indentation--;
@@ -67,7 +70,7 @@ public class Emitter {
         }
 
         String type = "and".equals(operator) ? "i1" : "i32";
-        emitLine(String.format("%s = %s %s %s, %s", reg, operator, typeToLLVM(type), leftOperand, rightOperand));
+        emitLine(String.format("%s = %s %s %s, %s", reg, operator, type, leftOperand, rightOperand));
         return reg;
     }
 
@@ -98,6 +101,10 @@ public class Emitter {
         }
     }
 
+    public void emitPrintInt(String reg) throws IOException {
+        emitLine(String.format("call void @print_int(i32 %s)", reg));
+    }
+
     public void emitHelpers() throws IOException {
         outFile.write(("""
                        declare i8* @calloc(i32, i32)
@@ -121,10 +128,12 @@ public class Emitter {
     };
 
     private static String typeToLLVM(String type) {
-        // TODO: arrays
         return switch (type) {
             case "int" -> "i32";
+            case "int[]" -> "i32*";
             case "boolean" -> "i1";
+            case "boolean[]" -> "i1*";
+            case "void" -> "void";
             default -> "i8*";
         };
     }

@@ -41,9 +41,10 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(MainClass n, String argu) throws Exception {
-        emitter.emitMethodStart(new Method ("int", "main", null, null));
-
-        emitter.emitMethodEnd();
+        Method m = new Method ("void", "main", null, null);
+        emitter.emitMethodStart(m);
+        n.f15.accept(this, null);
+        emitter.emitMethodEnd(m);
         return null;
     }
 
@@ -128,7 +129,14 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         n.f8.accept(this, null);
         // TODO return expression
 
-        emitter.emitMethodEnd();
+        emitter.emitMethodEnd(m);
+
+        return null;
+    }
+
+    @Override
+    public String visit(PrintStatement n, String argu) throws Exception {
+        emitter.emitPrintInt(n.f2.accept(this, null));
 
         return null;
     }
