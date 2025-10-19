@@ -53,10 +53,8 @@ public class Emitter {
 
     }
 
-    public void emitMethodEnd(Method m) throws IOException {
-        if (m.returnType.equals("void")) {
-            emitLine("ret void");
-        }
+    public void emitMethodEnd(Method m, String ret) throws IOException {
+        emitLine(String.format("ret %s %s", typeToLLVM(m.returnType), ret));
         outFile.write("}\n".getBytes());
         variableToRegister = null;
         indentation--;

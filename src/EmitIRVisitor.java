@@ -44,7 +44,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         Method m = new Method ("void", "main", null, null);
         emitter.emitMethodStart(m);
         n.f15.accept(this, null);
-        emitter.emitMethodEnd(m);
+        emitter.emitMethodEnd(m, "");
         return null;
     }
 
@@ -127,9 +127,8 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         symbolTable.enterScope(m.getLocalScope());
 
         n.f8.accept(this, null);
-        // TODO return expression
 
-        emitter.emitMethodEnd(m);
+        emitter.emitMethodEnd(m, n.f10.accept(this, null));
 
         return null;
     }
