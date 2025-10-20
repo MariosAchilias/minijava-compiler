@@ -24,7 +24,7 @@ class Main {
                 TypeCheckVisitor typeCheck = new TypeCheckVisitor(symbolTable);
                 root.accept(typeCheck, null);
 
-                Emitter emitter = new Emitter(fout, symbolTable);
+                Emitter emitter = new Emitter(fout);
                 EmitIRVisitor emitIR = new EmitIRVisitor(symbolTable, emitter);
                 root.accept(emitIR, null);
 

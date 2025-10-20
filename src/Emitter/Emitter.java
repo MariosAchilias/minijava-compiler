@@ -12,12 +12,10 @@ public class Emitter {
     FileOutputStream outFile;
     int registerCount = 0;
     int indentation = 0;
-    SymbolTable symbolTable;
     LinkedHashMap<String, String> variableToRegister = null;
     LinkedHashMap<String, Vtable> classToVtable =  new LinkedHashMap<>();
-    public Emitter(FileOutputStream outFile, SymbolTable symbolTable) {
+    public Emitter(FileOutputStream outFile) {
         this.outFile = outFile;
-        this.symbolTable = symbolTable;
     }
 
     public String newRegister () {
@@ -35,7 +33,7 @@ public class Emitter {
             args.append(String.format(", %s %%%s", typeToLLVM(a.varType), a.id));
         }
 
-        if (c == symbolTable.main && m.id.equals("main")) {
+        if (m.id.equals("main")) {
             emitLine(String.format("\ndefine void @main() {\n")); // TODO main args
         } else {
             // All methods have a 'this' pointer as their first argument
@@ -132,27 +130,26 @@ public class Emitter {
         return ret;
     }
 
-    public String emitRvalue(Class class_, String id) throws Exception {
+    public String emitRvalue(Class class_, String type, String id) throws Exception {
+        String llvmType = typeToLLVM(type);
         // Return register containing value
         String reg = variableToRegister.get(id);
         if (reg != null) {
             // Is a local variable or parameter
-            String type = typeToLLVM(symbolTable.getLocalVar(id).varType);
             String ret = newRegister();
-            emitLine(String.format("%s = load %s, %s* %s", ret, type, type, reg));
+            emitLine(String.format("%s = load %s, %s* %s", ret, llvmType, llvmType, reg));
             return ret;
         }
                 
         // Is instance variable
         String tmp = newRegister();
         emitLine(String.format("%s = getelementptr i8, i8* %%this, i32 %d", tmp, class_.getOffset(id)));
-        String type = typeToLLVM(class_.getField(id).varType);
-        
+
         String tmp_ = newRegister();
-        emitLine(String.format("%s = bitcast i8* %s to %s*", tmp_, tmp, type));
+        emitLine(String.format("%s = bitcast i8* %s to %s*", tmp_, tmp, llvmType));
 
         String ret = newRegister();
-        emitLine(String.format("%s = load %s, %s* %s", ret, type, type, tmp_));
+        emitLine(String.format("%s = load %s, %s* %s", ret, llvmType, llvmType, tmp_));
         // TODO: array elements
 
         return ret;
@@ -162,29 +159,24 @@ public class Emitter {
         emitLine(String.format("store %s %s, %s* %s\n", typeToLLVM(type), value_reg, typeToLLVM(type), lhs_reg));
     }
 
-    public String emitAllocation(String type) throws Exception {
-        Class c = symbolTable.getClass(type);
-
+    public String emitObjectAllocation(String type, int size) throws Exception {
         String allocReg = newRegister();
-        emitLine(String.format("%s = call i8* @calloc(i32 1, i32 %d)", allocReg, c.getSize()));
+        emitLine(String.format("%s = call i8* @calloc(i32 1, i32 %d)", allocReg, size));
 
         String tmp = newRegister();
-        int vt_size = classToVtable.get(c.name).size();
+        int vt_size = classToVtable.get(type).size();
         emitLine(String.format("%s = bitcast i8* %s to [%d x i8*]**", tmp, allocReg, vt_size));
         emitLine(String.format("store [%d x i8*]* @.%s_vtable, [%d x i8*]** %s", vt_size, type, vt_size, tmp));
 
         return allocReg;
     }
 
-    public void emitVTables() throws IOException {
-        outFile.write(String.format("@.%s_vtable = global [0 x i8*] []\n", symbolTable.main.name).getBytes());
-        for (Class c : symbolTable.getClasses()) {
-            StringBuilder methodDecls = new StringBuilder();
-            var vt = new Vtable();
-            int methodCount = buildMethodDecls(c, methodDecls, vt);
-            classToVtable.put(c.name, vt);
-            outFile.write(String.format("@.%s_vtable = global [%d x i8*] [%s]\n", c.name, methodCount, methodDecls.toString()).getBytes());
-        }
+    public void emitVTable(Class c) throws IOException {
+        StringBuilder methodDecls = new StringBuilder();
+        var vt = new Vtable();
+        int methodCount = buildMethodDecls(c, methodDecls, vt);
+        classToVtable.put(c.name, vt);
+        emitLine(String.format("@.%s_vtable = global [%d x i8*] [%s]\n", c.name, methodCount, methodDecls));
     }
 
     public void emitPrintInt(String reg) throws IOException {

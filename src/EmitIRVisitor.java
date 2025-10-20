@@ -18,7 +18,9 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
 
     @Override
     public String visit(Goal n, String argu) throws Exception {
-        emitter.emitVTables();
+        for (Class c : symbolTable.getClasses())
+            emitter.emitVTable(c);
+
         emitter.emitHelpers();
         n.f0.accept(this, null);
         n.f1.accept(this, null);
@@ -196,7 +198,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         if (getType != null)
             return type;
 
-        return emitter.emitAllocation(type);
+        return emitter.emitObjectAllocation(type, symbolTable.getClass(type).getSize());
     }
 
     // Expressions
@@ -267,16 +269,16 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         if (n.f0.which != 3) // Not identifier
             return n.f0.accept(this, getType);
 
-        if (getType != null) {
-            String id = n.f0.accept(this, getType);
-            Variable var = symbolTable.getLocalVar(id);
-            if (var == null)
-                var = currentClass.getField(id);
+        String id = n.f0.accept(this, getType);
+        Variable var = symbolTable.getLocalVar(id);
+        if (var == null)
+            var = currentClass.getField(id);
 
+        if (getType != null) {
             return var.varType;
         }
 
-        return emitter.emitRvalue(currentClass, n.f0.accept(this, null));
+        return emitter.emitRvalue(currentClass, var.varType, n.f0.accept(this, null));
     }
 
     // Trivial methods
