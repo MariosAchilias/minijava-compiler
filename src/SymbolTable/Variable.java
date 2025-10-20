@@ -1,10 +1,11 @@
 package SymbolTable;
 
-public class Variable extends Symbol {
-    public String varType;
+public class Variable {
+    public String name;
+    public String type;
     public Variable(String type, String name) {
-        super(SymbolType.FIELD_VAR, name);
-        varType = type;
+        this.name = name;
+        this.type = type;
     }
 
     public static boolean isBuiltin(String type) {

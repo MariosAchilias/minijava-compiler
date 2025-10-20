@@ -10,7 +10,6 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
     Emitter emitter;
     Class currentClass;
-    LinkedHashMap<String, VTable> vtables;
 
     public EmitIRVisitor(SymbolTable symbolTable, Emitter emitter) {
         this.symbolTable = symbolTable;
@@ -20,8 +19,8 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
 
     @Override
     public String visit(Goal n, String argu) throws Exception {
-        for (Class c : symbolTable.getClasses())
-            vtables.put(c.name, emitter.emitVTable(c));
+        for (Class c : symbolTable.classes)
+            emitter.emitVTable(c);
 
         emitter.emitHelpers();
         n.f0.accept(this, null);
@@ -51,10 +50,12 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(MainClass n, String argu) throws Exception {
         currentClass = symbolTable.main;
-        Method m = new Method ("void", "main", new ArrayList<>(), null);
+        symbolTable.enterClass(symbolTable.main);
+        Method m = new Method ("void", "main", new ArrayList<>());
         emitter.emitMethodStart(currentClass, m);
         n.f15.accept(this, null);
         emitter.emitMethodEnd(m, "");
+        symbolTable.exitClass();
         return null;
     }
 
@@ -70,7 +71,9 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     public String visit(ClassDeclaration n, String argu) throws Exception {
         String className = n.f1.accept(this, null);
         currentClass = symbolTable.getClass(className);
+        symbolTable.enterClass(currentClass);
         n.f4.accept(this, className);
+        symbolTable.exitClass();
         return null;
     }
 
@@ -88,7 +91,9 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     public String visit(ClassExtendsDeclaration n, String argu) throws Exception {
         String className = n.f1.accept(this, null);
         currentClass = symbolTable.getClass(className);
+        symbolTable.enterClass(currentClass);
         n.f6.accept(this, className);
+        symbolTable.exitClass();
         return null;
     }
 
@@ -102,7 +107,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     public String visit(AssignmentStatement n, String argu) throws Exception {
         
         String id = n.f0.accept(this, null);
-        String type = symbolTable.getVar(id).varType;
+        String type = symbolTable.getVarOrField(id).type;
         
         String lhs = emitter.emitLvalueAddressOf(currentClass, id);
         String rhs = n.f2.accept(this, null);
@@ -132,14 +137,15 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(MethodDeclaration n, String className) throws Exception {
         String methodName = n.f2.accept(this, null);
-        Method m = symbolTable.getMethod(methodName, className);
+        Method m = symbolTable.getClass(className).getMethod(methodName);
         emitter.emitMethodStart(currentClass, m);
-        symbolTable.enterScope(m.getLocalScope());
+        symbolTable.enterMethod(m);
 
         n.f8.accept(this, null);
 
         emitter.emitMethodEnd(m, n.f10.accept(this, null));
 
+        symbolTable.exitMethod();
         return null;
     }
 
@@ -200,7 +206,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         if (getType != null)
             return type;
 
-        return emitter.emitObjectAllocation(type, symbolTable.getClass(type).getSize());
+        return emitter.emitObjectAllocation(symbolTable.getClass(type));
     }
 
     // Expressions
@@ -272,15 +278,15 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
             return n.f0.accept(this, getType);
 
         String id = n.f0.accept(this, getType);
-        Variable var = symbolTable.getLocalVar(id);
+        Variable var = symbolTable.getVarOrField(id);
         if (var == null)
             var = currentClass.getField(id);
 
         if (getType != null) {
-            return var.varType;
+            return var.type;
         }
 
-        return emitter.emitRvalue(currentClass, var.varType, n.f0.accept(this, null));
+        return emitter.emitRvalue(currentClass, var.type, n.f0.accept(this, null));
     }
 
     // Trivial methods

@@ -4,87 +4,91 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 
 public final class SymbolTable {
-    private final LinkedHashMap<String, Class> classes;
+    public ArrayList<Class> classes;
     public Class main;
-    private Scope<Variable> localVariables;
+    private Class currentClass = null;
+    private Method currentMethod = null;
 
     public SymbolTable() {
-        classes = new LinkedHashMap<String, Class>();
+        classes = new ArrayList<Class>();
         main = null;
-        localVariables = null;
     }
 
-    public void enterClassScope(Class c) {
-        localVariables = c.getVariableScope();
+    public void enterClass(Class c) {
+        currentClass = c;
     }
 
-    public void exitClassScope() {
-        localVariables = null;
+    public void exitClass() {
+        currentClass = null;
     }
 
-    public void enterScope(Scope<Variable> scope) {
-        localVariables = scope;
+    public void enterMethod(Method m) {
+        currentMethod = m;
     }
 
-    public void exitLocalScope() {
-        localVariables = localVariables.getParent();
+    public void exitMethod() {
+        currentMethod = null;
     }
 
-    public boolean addVariable(String id, Variable symbol) {
-        return localVariables.addSymbol(id, symbol);
+    public void addVarOrField(Variable v) {
+        if (currentMethod != null)
+            currentMethod.localVars.add(v);
+        else
+            currentClass.fields.add(v);
     }
 
-    public Variable getVar(String id) {
-        return localVariables.getSymbol(id);
+    public Variable getVarOrField(String name) {
+        if (currentMethod == null)
+            return currentClass.getField(name);
+        
+        Variable var = currentMethod.localVars.stream()
+                .filter(v -> v.name.equals(name))
+                .findFirst()
+                .orElse(null);
+
+        if (var != null)
+            return var;
+
+        var = currentMethod.parameters.stream()
+                .filter(v -> v.name.equals(name))
+                .findFirst()
+                .orElse(null);
+
+        if (var != null)
+            return var;
+
+        return currentClass.getField(name);
     }
 
-    public Variable getLocalVar(String id) { return localVariables.getLocalSymbol(id); }
-
-    public Method getMethod(String id, String className) {
-        for (Class c = classes.get(className); c != null; c = c.getParent()) {
-            Method method = c.getMethod(id);
-            if (method != null)
-                return method;
-        }
-        return null;
-    }
-
-    public Class getClass(String name) throws Exception {
+    public Class getClass(String name) {
         if (name == main.name)
             return main;
-        return classes.get(name);
+        return classes.stream()
+                .filter(c -> c.name.equals(name))
+                .findFirst()
+                .orElse(null);
     }
 
-    public Collection<Class> getClasses() {
-        return classes.values();
-    }
-
-    public Class newClass(String name, Class superClass) {
-        Class c = new Class(name, superClass);
-        classes.put(name, c);
-        return c;
-    }
-
-    public boolean isSubclass(String derived, String base) {
-        for (Class c = classes.get(derived); c != null; c = c.getParent()) {
+    public boolean isSubclass(Class derived, Class base) {
+        for (Class c = derived; c != null; c = c.superClass) {
             if (base.equals(c.name))
                 return true;
         }
         return false;
     }
 
-    public boolean compatibleMethodParameters(ArrayList<Variable> methodParameters, ArrayList<Variable> testParameters) {
+    public boolean compatibleMethodParameters(ArrayList<Variable> methodParameters, ArrayList<Variable> testParameters) throws Exception {
         if (methodParameters.size() != testParameters.size())
             return false;
         for (int i = 0; i < methodParameters.size(); i++) {
-            String paramType = methodParameters.get(i).varType;
-            String testParamType = testParameters.get(i).varType;
+            String paramType = methodParameters.get(i).type;
+            String testParamType = testParameters.get(i).type;
             if (Variable.isBuiltin(paramType)) {
                 if (!paramType.equals((testParamType))) return false;
                 else continue;
             }
 
-            if (!isSubclass(testParamType, paramType))
+            if (!isSubclass(getClass(testParamType), getClass(paramType)))
                 return false;
         }
 

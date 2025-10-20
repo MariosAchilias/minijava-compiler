@@ -5,6 +5,8 @@ import SymbolTable.*;
 import SymbolTable.Class;
 import java.util.ArrayList;
 
+import static SymbolTable.Variable.isBuiltin;
+
 class TypeCheckVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
     public TypeCheckVisitor(SymbolTable symbolTable) {
@@ -12,10 +14,10 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     }
 
     public String visit(MainClass n, String argu) throws Exception {
-        symbolTable.enterClassScope(symbolTable.main);
+        symbolTable.enterClass(symbolTable.main);
         /* f15 -> ( Statement() ) */
         n.f15.accept(this, argu);
-        symbolTable.exitClassScope();
+        symbolTable.exitClass();
         return null;
     }
     /**
@@ -31,16 +33,16 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         String className = n.f1.accept(this, argu);
         Class class_ = symbolTable.getClass(className);
 
-        symbolTable.enterClassScope(class_);
+        symbolTable.enterClass(class_);
         n.f4.accept(this, className);
-        symbolTable.exitLocalScope();
+        symbolTable.exitClass();
 
         return null;
     }
 
     public String visit(VarDeclaration n, String argu) throws Exception {
         String type = n.f0.accept(this, argu);
-        if (!Variable.isBuiltin(type))
+        if (!isBuiltin(type))
             if (symbolTable.getClass(type) == null)
                 throw new SemanticException("Definition of variable of undeclared type '" + type + "'");
 
@@ -62,9 +64,9 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         String className = n.f1.accept(this, argu);
         Class class_ = symbolTable.getClass(className);
 
-        symbolTable.enterClassScope(class_);
+        symbolTable.enterClass(class_);
         n.f6.accept(this, className);
-        symbolTable.exitLocalScope();
+        symbolTable.exitClass();
 
         return null;
     }
@@ -86,34 +88,33 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(MethodDeclaration n, String className) throws Exception {
-
-        String returnType = n.f1.accept(this, className);
         String methodName = n.f2.accept(this, className);
-        Method method = symbolTable.getMethod(methodName, className);
+        Method method = symbolTable.getClass(className).getMethod(methodName);
         assert method != null;
 
         String retType = n.f1.accept(this, null);
-        if (!(Variable.isBuiltin(retType) || symbolTable.getClass(retType) != null))
-            throw new SemanticException("Undeclared class '" + retType + "' in method '" + method.id + "' return type");
+        if (!(isBuiltin(retType) || symbolTable.getClass(retType) != null))
+            throw new SemanticException("Undeclared class '" + retType + "' in method '" + method.name + "' return type");
 
         n.f4.accept(this, methodName);
 
-        symbolTable.enterScope(method.getLocalScope());
+        symbolTable.enterMethod(method);
         n.f8.accept(this, className);
 
+        String returnType = n.f1.accept(this, className);
         String returnExprType = n.f10.accept(this, className);
 
-        if (!(returnExprType.equals(returnType) || symbolTable.isSubclass(returnExprType, returnType)))
+        if (!(returnExprType.equals(returnType) || symbolTable.isSubclass(symbolTable.getClass(returnExprType), symbolTable.getClass(returnType))))
             throw new SemanticException("Return type " + returnExprType + " of method " + className + "." + methodName + " doesn't match declared type " + returnType);
 
-        symbolTable.exitLocalScope();
+        symbolTable.exitMethod();
 
         return null;
     }
 
     public String visit(FormalParameter n, String argu) throws Exception {
         String type = n.f0.accept(this, argu);
-        if (!Variable.isBuiltin(type) && symbolTable.getClass(type) == null)
+        if (!isBuiltin(type) && symbolTable.getClass(type) == null)
             throw new SemanticException("Parameter of undeclared user defined type '" + type + "' in declaration of method '" + argu + "'");
 
         return null;
@@ -204,10 +205,10 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         }
 
         String id = n.f0.accept(this, argu);
-        Variable var = symbolTable.getVar(id);
+        Variable var = symbolTable.getVarOrField(id);
         if (var == null)
             throw new SemanticException("Identifier " + id + " not found in scope");
-        return symbolTable.getVar(id).varType;
+        return symbolTable.getVarOrField(id).type;
     }
 
     public String visit(IntegerLiteral n, String argu) throws Exception {
@@ -284,16 +285,19 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(AssignmentStatement n, String argu) throws Exception {
         String id = n.f0.accept(this, argu);
-        Variable leftHandSide = symbolTable.getVar(id);
+        Variable leftHandSide = symbolTable.getVarOrField(id);
         if(leftHandSide == null)
             throw new SemanticException("Assignment to undefined variable " + id);
 
         String exprType = n.f2.accept(this, argu);
-        if (exprType.equals(leftHandSide.varType))
+        if (exprType.equals(leftHandSide.type))
             return null;
 
-        if (!symbolTable.isSubclass(exprType, leftHandSide.varType))
-                throw new SemanticException("Assignment to variable of type " + leftHandSide.varType + " of expression of incompatible type " + exprType);
+        if (isBuiltin(leftHandSide.type))
+            throw new SemanticException("Assignment to variable of primitive type " + leftHandSide.type + " of expression of incompatible type " + exprType);
+
+        if (!symbolTable.isSubclass(symbolTable.getClass(exprType), symbolTable.getClass(leftHandSide.type)))
+            throw new SemanticException("Assignment to variable of type " + leftHandSide.type + " of expression of incompatible type " + exprType);
 
         return null;
     }
@@ -302,16 +306,16 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
         if (!"int".equals(n.f2.accept(this, argu)))
             throw new SemanticException("Array assignment with non-integer expression as index");
 
-        Variable array = symbolTable.getVar(n.f0.accept(this, argu));
+        Variable array = symbolTable.getVarOrField(n.f0.accept(this, argu));
         if (array == null) {
             throw new SemanticException("Array assignment to variable that doesn't exist in scope: " + n.f0.accept(this, argu));
         }
         String exprType = n.f5.accept(this, argu);
 
-        if (array.varType.equals("int[]") && exprType.equals("int"))
+        if (array.type.equals("int[]") && exprType.equals("int"))
             return null;
 
-        if (array.varType.equals("boolean[]") && exprType.equals("boolean"))
+        if (array.type.equals("boolean[]") && exprType.equals("boolean"))
             return null;
 
         throw new SemanticException("Array assignment to variable of non-array type");
@@ -362,13 +366,13 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(MessageSend n, String argu) throws Exception {
         String className = n.f0.accept(this, argu);
-        if (Variable.isBuiltin(className))
+        if (isBuiltin(className))
             throw new SemanticException("Method call on variable of built-in type");
         if (symbolTable.getClass(className) == null)
             throw new SemanticException("Method call to method of undefined class");
 
         String methodName = n.f2.accept(this, argu);
-        Method method = symbolTable.getMethod(methodName, className);
+        Method method = symbolTable.getClass(className).getMethod(methodName);
         if (method == null)
             throw new SemanticException("Class " + className + " or its parent classes have no method " + methodName);
 

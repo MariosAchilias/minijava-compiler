@@ -1,18 +1,23 @@
 package SymbolTable;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 public class Class {
     public final String name;
-    private final Class superClass;
-    private Scope<Variable> fields;
-    private Scope<Method> methods;
+    public final Class superClass;
+    public ArrayList<Variable> fields;
+    public ArrayList<Method> methods;
 
     public Class (String name, Class superClass) {
         this.name = name;
         this.superClass = superClass;
-        this.methods = new Scope<Method>(superClass == null ? null : superClass.getMethodScope());
-        this.fields = new Scope<Variable>(superClass == null ? null : superClass.getVariableScope());
+        this.methods = new ArrayList<>();
+        this.fields = new ArrayList<>();;
+    }
+
+    public ArrayList<Method> getVtable() {
+        return new ArrayList<>();
     }
 
     public int getOffset(String field) {
@@ -21,68 +26,62 @@ public class Class {
         if (offset != -1)
             return offset;
         
-        for (Variable v: fields.getValues()) {
-            if (v.id.equals(field))
+        for (Variable v: fields) {
+            if (v.name.equals(field))
                 return offset;
 
-            offset += sizeOf(v.varType);
+            offset += sizeOf(v.type);
         }
         return -1;
-    }
-
-    public Scope<Variable> getVariableScope() {
-        return fields;
-    }
-    public Scope<Method> getMethodScope() {
-        return methods;
-    }
-
-    public Class getParent() {return superClass;}
-
-    public Method getLocalMethod (String name) {
-        return methods.get(name);
     }
 
     public ArrayList<Method> getMethods () {
         ArrayList<Method> methods = new ArrayList<>();
         for (Class c = this; c != null; c = c.superClass) {
-            methods.addAll(c.methods.getValues());
+            methods.addAll(c.methods);
         }
         return methods;
     }
 
     public Method getMethod (String name) {
         for (Class c = this; c != null; c = c.superClass) {
-            Method m = c.getLocalMethod(name);
+            Method m = c.methods.stream()
+                    .filter(x -> x.name.equals(name))
+                    .findFirst()
+                    .orElse(null);
+
             if (m != null)
                 return m;
         }
         return null;
     }
 
-    public String inheritedFrom (String name) {
+    public Class inheritedFrom (Method m) {
         for (Class c = this; c != null; c = c.superClass) {
-            if (c.getLocalMethod(name) != null)
-                return c.name;
+            if (c.methods.stream().anyMatch(x -> x.name.equals(m.name)))
+                return c;
         }
         return null;
     }
 
-    public boolean addMethod (Method method) {
-        return methods.addSymbol(method.id, method);
-    }
+    public Variable getField(String name) {
+        for (Class c = this; c != null; c = c.superClass) {
+            Variable var = fields.stream()
+                    .filter(v -> v.name.equals(name))
+                    .findFirst()
+                    .orElse(null);
 
-    public boolean addField(Variable field) {
-        return fields.addSymbol(field.id, field);
+            if (var != null)
+                return var;
+        }
+        return null;
     }
-
-    public Variable getField(String id) {return fields.get(id);}
 
     public int getSize() {
         // first 8 bytes hold vtable pointer
         int size = superClass == null ? 8 : superClass.getSize();
-        for (Variable v: fields.getValues()) {
-            size += sizeOf(v.varType);
+        for (Variable v: fields) {
+            size += sizeOf(v.type);
         }
         return size;
     }

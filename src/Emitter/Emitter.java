@@ -3,14 +3,17 @@ package Emitter;
 import SymbolTable.*;
 import SymbolTable.Class;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class Emitter {
     FileOutputStream outFile;
     int registerCount = 0;
     int indentation = 0;
     LinkedHashMap<String, String> variableToRegister = null;
-    LinkedHashMap<String, VTable> classToVtable =  new LinkedHashMap<>();
     public Emitter(FileOutputStream outFile) {
         this.outFile = outFile;
     }
@@ -27,27 +30,27 @@ public class Emitter {
     public void emitMethodStart(Class c, Method m) throws IOException {
         var args = new StringBuilder();
         for (Variable a : m.parameters) {
-            args.append(String.format(", %s %%%s", typeToLLVM(a.varType), a.id));
+            args.append(String.format(", %s %%%s", typeToLLVM(a.type), a.name));
         }
 
-        if (m.id.equals("main")) {
+        if (m.name.equals("main")) {
             emitLine(String.format("\ndefine void @main() {\n")); // TODO main args
         } else {
             // All methods have a 'this' pointer as their first argument
-            emitLine(String.format("\ndefine %s @%s_%s(i8* %%this %s) {\n", typeToLLVM(m.returnType), c.name, m.id, args.toString()));
+            emitLine(String.format("\ndefine %s @%s_%s(i8* %%this %s) {\n", typeToLLVM(m.returnType), c.name, m.name, args.toString()));
         }
         indentation++;
         variableToRegister = new LinkedHashMap<>();
 
         // Allocate parameters & local variables
-        for (Variable a : m.getLocalScope().getValues()) {
-            String type = typeToLLVM(a.varType);
+        for (Variable a : Stream.concat(m.localVars.stream(), m.parameters.stream()).collect(Collectors.toList())) {
+            String type = typeToLLVM(a.type);
             String reg = newRegister();
-            variableToRegister.put(a.id, reg);
+            variableToRegister.put(a.name, reg);
             emitLine(String.format("%s = alloca %s", reg, type));
             // For parameters, initialize to given values
             if (m.parameters.contains(a))
-                emitLine(String.format("store %s %s, %s* %s\n", type, "%" + a.id, type, reg));
+                emitLine(String.format("store %s %s, %s* %s\n", type, "%" + a.name, type, reg));
         }
 
     }
@@ -61,7 +64,11 @@ public class Emitter {
 
     public String emitCall(String objectReg, Class c, Method m, java.util.ArrayList<String> args) throws Exception {
         String ret = newRegister();
-        int vtOffset = classToVtable.get(c.name).get(m.id);
+        ArrayList<Method> vtable = c.getVtable();
+        int vtOffset = IntStream.range(0, vtable.size())
+                .filter(i -> vtable.get(i).name.equals(m.name))
+                .findFirst()
+                .orElse(-1);
 
         // object layout in memory: {i8** vtable_ptr : 8 bytes, fields}
         String tmp = newRegister();
@@ -75,7 +82,7 @@ public class Emitter {
 
         StringBuilder argTypes = new StringBuilder("i8*");
         for (Variable p: m.parameters) {
-            argTypes.append(String.format(", %s", typeToLLVM(p.varType)));
+            argTypes.append(String.format(", %s", typeToLLVM(p.type)));
         }
 
         String retType = typeToLLVM(m.returnType);
@@ -118,7 +125,7 @@ public class Emitter {
         // Is instance variable
         reg = newRegister();
         emitLine(String.format("%s = getelementptr i8, i8* %%this, i32 %d", reg, class_.getOffset(id)));
-        String type = class_.getField(id).varType;
+        String type = class_.getField(id).type;
         
         String ret = newRegister();
         emitLine(String.format("%s = bitcast i8* %s to %s*", ret, reg, typeToLLVM(type)));
@@ -156,24 +163,22 @@ public class Emitter {
         emitLine(String.format("store %s %s, %s* %s\n", typeToLLVM(type), value_reg, typeToLLVM(type), lhs_reg));
     }
 
-    public String emitObjectAllocation(String type, int size) throws Exception {
+    public String emitObjectAllocation(Class c) throws Exception {
         String allocReg = newRegister();
-        emitLine(String.format("%s = call i8* @calloc(i32 1, i32 %d)", allocReg, size));
+        emitLine(String.format("%s = call i8* @calloc(i32 1, i32 %d)", allocReg, c.getSize()));
 
         String tmp = newRegister();
-        int vt_size = classToVtable.get(type).size();
+        int vt_size = c.getVtable().size();
         emitLine(String.format("%s = bitcast i8* %s to [%d x i8*]**", tmp, allocReg, vt_size));
-        emitLine(String.format("store [%d x i8*]* @.%s_vtable, [%d x i8*]** %s", vt_size, type, vt_size, tmp));
+        emitLine(String.format("store [%d x i8*]* @.%s_vtable, [%d x i8*]** %s", vt_size, c.name, vt_size, tmp));
 
         return allocReg;
     }
 
-    public VTable emitVTable(Class c) throws IOException {
-        VTable vt = new VTable();
+    public void emitVTable(Class c) throws IOException {
         StringBuilder methodDecls = new StringBuilder();
-        int methodCount = buildMethodDecls(c, methodDecls, vt);
+        int methodCount = buildMethodDecls(c, methodDecls, c.getVtable());
         emitLine(String.format("@.%s_vtable = global [%d x i8*] [%s]\n", c.name, methodCount, methodDecls));
-        return vt;
     }
 
     public void emitPrintInt(String reg) throws IOException {
@@ -213,21 +218,22 @@ public class Emitter {
         };
     }
 
-    private int buildMethodDecls(Class c, StringBuilder methodDecls, VTable vtable) {
+    private int buildMethodDecls(Class c, StringBuilder methodDecls, ArrayList<Method> vtable) {
         int cnt = 0;
         for (Method m : c.getMethods()) {
-            if (vtable.get(m.id) != null)
+            if (vtable.stream().anyMatch(x -> x.name.equals(m.name)))
                 continue;
 
-            vtable.put(m.id, cnt++);
+            vtable.add(m);
+            cnt++;
 
             var args = new StringBuilder();
             for (Variable a : m.parameters)
-                args.append(String.format(", %s", typeToLLVM(a.varType)));
+                args.append(String.format(", %s", typeToLLVM(a.type)));
 
             // All methods have a 'this' pointer as their first argument
             String signature = String.format("%s (i8*%s)", typeToLLVM(m.returnType), args.toString()); 
-            String decl = String.format("i8* bitcast (%s* @%s_%s to i8*)", signature, c.inheritedFrom(m.id), m.id);
+            String decl = String.format("i8* bitcast (%s* @%s_%s to i8*)", signature, c.inheritedFrom(m).name, m.name);
             if (methodDecls.length() > 0) methodDecls.append(", ");
             methodDecls.append(decl);
         }

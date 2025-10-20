@@ -31,11 +31,11 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
      */
     @Override
     public String visit(MainClass n, String argu) throws Exception {
-        String className = n.f1.accept(this, null);
-        symbolTable.main = new Class(className, null);
-        symbolTable.enterClassScope(symbolTable.main);
-        n.f14.accept(this, className);
-        symbolTable.exitClassScope();
+        String name = n.f1.accept(this, null);
+        symbolTable.main = new Class(name, null);
+        symbolTable.enterClass(symbolTable.main);
+        n.f14.accept(this, name);
+        symbolTable.exitClass();
 
         return null;
     }
@@ -56,15 +56,16 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
         if (symbolTable.getClass(className) != null)
             throw new SemanticException("Double declaration of class '" + className + "'");
 
-        Class newClass = symbolTable.newClass(className, null);
-        symbolTable.enterClassScope(newClass);
+        Class newClass = new Class(className, null);
+        symbolTable.classes.add(newClass);
+        symbolTable.enterClass(newClass);
 
         n.f2.accept(this, null);
         n.f3.accept(this, className);
         n.f4.accept(this, className);
         n.f5.accept(this, null);
 
-        symbolTable.exitClassScope();
+        symbolTable.exitClass();
 
         return null;
     }
@@ -92,14 +93,15 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
         if (superClass == null)
             throw new SemanticException("Class '" + className + "' extends undeclared class '" + superClassName + "'");
 
-        Class newClass = symbolTable.newClass(className, superClass);
+        Class newClass = new Class(className, superClass);
+        symbolTable.classes.add(newClass);
 
-        symbolTable.enterClassScope(newClass);
+        symbolTable.enterClass(newClass);
 
         n.f5.accept(this, className);
         n.f6.accept(this, className);
 
-        symbolTable.exitClassScope();
+        symbolTable.exitClass();
 
         return null;
     }
@@ -113,15 +115,10 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
         String type = n.f0.accept(this, argu);
         String name = n.f1.accept(this, argu);
 
-        if (symbolTable.getLocalVar(name) != null)
+        if (symbolTable.getVarOrField(name) != null)
             throw new SemanticException("Double definition of variable " + name);
 
-        Variable var = new Variable(type, name);
-        symbolTable.addVariable(name, var);
-        Class class_ = symbolTable.getClass(argu);
-        if (class_ != null) {
-            class_.addField(var);
-        }
+        symbolTable.addVarOrField(new Variable(type, name));
 
         return null;
     }
@@ -145,15 +142,15 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
     public String visit(MethodDeclaration n, String className) throws Exception {
         String name = n.f2.accept(this, null);
         Class class_ = symbolTable.getClass(className);
-        if (class_.getLocalMethod(name) != null)
+        if (class_.methods.stream().anyMatch(x -> x.name.equals(name)))
             throw new SemanticException("Double declaration of method '"+ name + "'");
 
         String retType = n.f1.accept(this, null);
-        Method method = new Method(retType, name, null, class_.getVariableScope());
+        Method method = new Method(retType, name, null);
 
-        class_.addMethod(method);
+        class_.methods.add(method);
 
-        symbolTable.enterScope(method.getLocalScope());
+        symbolTable.enterMethod(method);
 
         // FormalParameterList visitor should create and set array
         if (n.f4.present())
@@ -161,9 +158,9 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
 
         n.f7.accept(this, null);
 
-        symbolTable.exitLocalScope();
+        symbolTable.exitMethod();
 
-        Class parent = symbolTable.getClass(className).getParent();
+        Class parent = symbolTable.getClass(className).superClass;
         if (parent == null)
             return null;
             
@@ -190,15 +187,14 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
 
         String className = argu.split(";")[0];
         String methodName = argu.split(";")[1];
-        Method method = symbolTable.getMethod(methodName, className);
+        Method method = symbolTable.getClass(className).getMethod(methodName);
         Variable param = new Variable(type, name);
         assert method != null;
         for (Variable v: method.parameters) {
-            if (v.id.equals(name))
-                throw new SemanticException("Duplicate parameter '" + name + "' in '" + method.id + "' method declaration");
+            if (v.name.equals(name))
+                throw new SemanticException("Duplicate parameter '" + name + "' in '" + method.name + "' method declaration");
         }
         method.parameters.add(param);
-        symbolTable.addVariable(name, param);
 
         return type + " " + name;
     }

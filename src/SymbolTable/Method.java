@@ -2,19 +2,16 @@ package SymbolTable;
 
 import java.util.ArrayList;
 
-public class Method extends Symbol{
+public class Method {
+    public String name;
     public String returnType;
     public ArrayList<Variable> parameters;
-    private final Scope<Variable> localVars;
+    public ArrayList<Variable> localVars;
 
-    public Method(String returnType, String methodName, ArrayList<Variable> parameters, Scope<Variable> classScope) {
-        super(SymbolType.METHOD, methodName);
+    public Method(String returnType, String name, ArrayList<Variable> parameters) {
+        this.name = name;
         this.returnType = returnType;
-        this.parameters = parameters == null ? new ArrayList<Variable>() : parameters;
-        this.localVars = new Scope<Variable>(classScope);
-    }
-
-    public Scope<Variable> getLocalScope() {
-        return localVars;
+        this.parameters = parameters == null ? new ArrayList<>() : parameters;
+        this.localVars = new ArrayList<>();
     }
 }
