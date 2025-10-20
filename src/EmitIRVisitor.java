@@ -159,12 +159,15 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     public String visit(MessageSend n, String argu) throws Exception {
 
         String type = n.f0.accept(this, "getType");
-        System.out.println(String.format("Messagesend type: %s", type));
         String reg = n.f0.accept(this, null);
         Class c = symbolTable.getClass(type);
         Method m = c.getMethod(n.f2.accept(this, null));
-        ArrayList<Variable> args = new ArrayList<>();
-        // TODO populate args
+
+        ArrayList<String> args = new ArrayList<>();
+        String argNames = n.f4.accept(this, argu); // semicolon-separated "type,register" pairs
+        for (String s: argNames.split(";"))
+            args.add(s);
+
         return emitter.emitCall(reg, c, m, args);
     }
 
@@ -287,23 +290,66 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     }
 
     @Override
-    public String visit(IntegerLiteral n, String argu) throws Exception {
+    public String visit(IntegerLiteral n, String getType) throws Exception {
+        if (getType != null) {
+            return "int";
+        }
         return n.f0.toString();
     }
 
     @Override
-    public String visit(TrueLiteral n, String argu) throws Exception {
+    public String visit(TrueLiteral n, String getType) throws Exception {
+        if (getType != null) {
+            return "boolean";
+        }
         return n.f0.toString();
     }
 
     @Override
-    public String visit(FalseLiteral n, String argu) throws Exception {
+    public String visit(FalseLiteral n, String getType) throws Exception {
+        if (getType != null) {
+            return "boolean";
+        }
         return n.f0.toString();
     }
 
     @Override
-    public String visit(BracketExpression n, String argu) throws Exception {
-        return n.f1.accept(this, argu);
+    public String visit(BracketExpression n, String getType) throws Exception {
+        return n.f1.accept(this, getType);
     }
+
+    // Misc
+    /**
+     * Grammar production:
+     * f0 -> Expression()
+     * f1 -> ExpressionTail()
+     */
+    public String visit(ExpressionList n, String argu) throws Exception {
+        String type = n.f0.accept(this, "getType");
+        return String.format("%s,%s", type, n.f0.accept(this, argu)) + ";" + n.f1.accept(this, argu);
+    }
+
+    /**
+     * Grammar production:
+     * f0 -> ( ExpressionTerm() )*
+     */
+    public String visit(ExpressionTail n, String argu) throws Exception {
+        StringBuilder tail = new StringBuilder();
+        for (Node n_: n.f0.nodes)
+            tail.append(n_.accept(this, argu) + ";");
+
+        return tail.toString();
+    }
+
+    /**
+     * Grammar production:
+     * f0 -> ","
+     * f1 -> Expression()
+     */
+    public String visit(ExpressionTerm n, String argu) throws Exception {
+        String type = n.f1.accept(this, "getType");
+        return String.format("%s,%s", type, n.f1.accept(this, argu));
+    }
+
 
 }

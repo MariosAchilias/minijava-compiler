@@ -1,7 +1,7 @@
 ## Info
 Compiler front-end for MiniJava, an educational Java-like language.
 
-Perfroms basic semantic checks (e.g. use before declaration, type errors) and outputs LLVM IR.
+Performs basic semantic checks (e.g. use before declaration, type errors) and outputs LLVM IR.
 
 Support for basic language features like dynamic dispatch and runtime array bounds checking.
 

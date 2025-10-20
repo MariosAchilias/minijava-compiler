@@ -63,7 +63,7 @@ public class Emitter {
         indentation--;
     }
 
-    public String emitCall(String objectReg, Class c, Method m, java.util.ArrayList<Variable> args) throws IOException {
+    public String emitCall(String objectReg, Class c, Method m, java.util.ArrayList<String> args) throws Exception {
         String ret = newRegister();
         int vtOffset = classToVtable.get(c.name).get(m.id);
 
@@ -77,12 +77,24 @@ public class Emitter {
         tmp_ = newRegister();
         emitLine(String.format("%s = load i8*, i8** %s", tmp_, tmp));
 
-        String funcPtr = newRegister();
-        String argTypes = ""; // TODO
+        StringBuilder argTypes = new StringBuilder("i8*");
+        for (Variable p: m.parameters) {
+            argTypes.append(String.format(", %s", typeToLLVM(p.varType)));
+        }
+
         String retType = typeToLLVM(m.returnType);
+        String funcPtr = newRegister();
         emitLine(String.format("%s = bitcast i8* %s to %s(%s)*", funcPtr, tmp_, retType, argTypes));
 
-        String argRegs = ""; // TODO
+        StringBuilder argRegs = new StringBuilder(String.format("i8* %s", objectReg)); // 'this'
+        for (String a: args) {
+            // a contains comma separated type and register
+            String type = typeToLLVM(a.split(",")[0]);
+            String reg = a.split(",")[1];
+            System.out.println(String.format("type of arg: %s", type));
+            argRegs.append(String.format(", %s %s", type, reg));
+        }
+
         emitLine(String.format("%s = call %s %s(%s)", ret, retType, funcPtr, argRegs));
 
         return ret;
