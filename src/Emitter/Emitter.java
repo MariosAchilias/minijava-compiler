@@ -3,17 +3,14 @@ package Emitter;
 import SymbolTable.*;
 import SymbolTable.Class;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-
-final class Vtable extends LinkedHashMap<String, Integer> {}; // method name -> offset
 
 public class Emitter {
     FileOutputStream outFile;
     int registerCount = 0;
     int indentation = 0;
     LinkedHashMap<String, String> variableToRegister = null;
-    LinkedHashMap<String, Vtable> classToVtable =  new LinkedHashMap<>();
+    LinkedHashMap<String, VTable> classToVtable =  new LinkedHashMap<>();
     public Emitter(FileOutputStream outFile) {
         this.outFile = outFile;
     }
@@ -171,12 +168,12 @@ public class Emitter {
         return allocReg;
     }
 
-    public void emitVTable(Class c) throws IOException {
+    public VTable emitVTable(Class c) throws IOException {
+        VTable vt = new VTable();
         StringBuilder methodDecls = new StringBuilder();
-        var vt = new Vtable();
         int methodCount = buildMethodDecls(c, methodDecls, vt);
-        classToVtable.put(c.name, vt);
         emitLine(String.format("@.%s_vtable = global [%d x i8*] [%s]\n", c.name, methodCount, methodDecls));
+        return vt;
     }
 
     public void emitPrintInt(String reg) throws IOException {
@@ -216,7 +213,7 @@ public class Emitter {
         };
     }
 
-    private int buildMethodDecls(Class c, StringBuilder methodDecls, Vtable vtable) {
+    private int buildMethodDecls(Class c, StringBuilder methodDecls, VTable vtable) {
         int cnt = 0;
         for (Method m : c.getMethods()) {
             if (vtable.get(m.id) != null)

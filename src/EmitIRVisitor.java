@@ -4,11 +4,13 @@ import Parser.visitor.*;
 import SymbolTable.*;
 import SymbolTable.Class;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 class EmitIRVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
     Emitter emitter;
     Class currentClass;
+    LinkedHashMap<String, VTable> vtables;
 
     public EmitIRVisitor(SymbolTable symbolTable, Emitter emitter) {
         this.symbolTable = symbolTable;
@@ -19,7 +21,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(Goal n, String argu) throws Exception {
         for (Class c : symbolTable.getClasses())
-            emitter.emitVTable(c);
+            vtables.put(c.name, emitter.emitVTable(c));
 
         emitter.emitHelpers();
         n.f0.accept(this, null);
