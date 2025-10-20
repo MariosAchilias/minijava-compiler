@@ -208,6 +208,11 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         return emitter.allocateIntArray(size);
     }
 
+    public String visit(BooleanArrayAllocationExpression n, String argu) throws Exception {
+        String size = n.f3.accept(this, null);
+        return emitter.allocateBoolArray(size);
+    }
+
     @Override
     public String visit(ArrayAllocationExpression n, String argu) throws Exception {
         return n.f0.accept(this, null);

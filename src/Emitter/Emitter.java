@@ -180,10 +180,31 @@ public class Emitter {
         return ptr;
     }
 
+    public String allocateBoolArray(String size) throws Exception {
+        // first 4 bytes are array length (i32)
+        String size_ = newRegister();
+        emitLine(String.format("%s = add i32 %s, 4", size_, size));
+
+        String tmp = newRegister();
+        emitLine(String.format("%s = call i8* @calloc(i32 %s, i32 1)", tmp, size_));
+
+        String i32ptr = newRegister();
+        emitLine(String.format("%s = bitcast i8* %s to i32*", i32ptr, tmp));
+        emitLine(String.format("store i32 %s, i32* %s", size, i32ptr));
+
+        String ptr = newRegister();
+        emitLine(String.format("%s = bitcast i8* %s to i1*", ptr, tmp));
+
+        return ptr;
+    }
+
     public String arrayLength(String ptr, String type) throws IOException {
         String type_ = typeToLLVM(type);
-//        emitLine(String.format("%s = load %s, %s* %s", ptr, type_, type_, reg));
-        // TODO: if boolean array, bitcast to i32*
+        if (type_ == "i1") {
+            String tmp = newRegister();
+            emitLine(String.format("%s = bitcast i1* %s to i32*", tmp, ptr));
+            ptr = tmp;
+        }
 
         String size = newRegister();
         emitLine(String.format("%s = load i32, i32* %s", size, ptr));
