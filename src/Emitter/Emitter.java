@@ -154,6 +154,34 @@ public class Emitter {
         emitLine(String.format("store %s %s, %s* %s\n", typeToLLVM(type), value_reg, typeToLLVM(type), lhs_reg));
     }
 
+    public void arrayAssignment(String type, String arrReg, String idxReg, String valReg) throws IOException {
+        // TODO: bounds check
+        String idx = newRegister();
+        // length stored in first 4 bytes (offset for i32 arrays is 1, for i1 (1-byte elements) is 4)
+        int offset = baseType(typeToLLVM(type)).equals("i32") ? 1 : 4;
+        emitLine(String.format("%s = add i32 %s, %d", idx, idxReg, offset));
+
+        String type_ = baseType(typeToLLVM(type));
+        String ptr = newRegister();
+        emitLine(String.format("%s = getelementptr %s, %s* %s, i32 %s", ptr, type_, type_, arrReg, idx));
+        emitLine(String.format("store %s %s, %s* %s", type_, valReg, type_, ptr));
+    }
+
+    public String arrayLookup(String type, String arrReg, String idxReg) throws IOException {
+        String idx = newRegister();
+        // length stored in first 4 bytes (offset for i32 arrays is 1, for i1 (1-byte elements) is 4)
+        int offset = baseType(typeToLLVM(type)).equals("i32") ? 1 : 4;
+        emitLine(String.format("%s = add i32 %s, %d", idx, idxReg, offset));
+
+        String type_ = baseType(typeToLLVM(type));
+        String ptr = newRegister();
+        emitLine(String.format("%s = getelementptr %s, %s* %s, i32 %s", ptr, type_, type_, arrReg, idx));
+        String val = newRegister();
+        emitLine(String.format("%s = load %s, %s* %s", val, type_, type_, ptr));
+
+        return val;
+    }
+
     public String objectAllocation(Class c) throws Exception {
         String allocReg = newRegister();
         emitLine(String.format("%s = call i8* @calloc(i32 1, i32 %d)", allocReg, c.getSize()));
@@ -266,6 +294,18 @@ public class Emitter {
             default -> "i8*";
         };
     }
+
+    private static String baseType(String type) {
+        return switch (type) {
+            case "i32*" -> "i32";
+            case "i32" -> "i32";
+            case "i1*" -> "i1";
+            case "i1" -> "i1";
+            case "void" -> "void";
+            default -> "i8";
+        };
+    }
+
 
     private ArrayList<Method> buildMethodDecls(Class c, StringBuilder methodDecls, ArrayList<Method> vtable) {
         for (Method m : c.getMethods()) {

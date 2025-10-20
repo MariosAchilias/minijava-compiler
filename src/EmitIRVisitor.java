@@ -218,6 +218,39 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         return n.f0.accept(this, null);
     }
 
+    /**
+     * Grammar production:
+     * f0 -> Identifier()
+     * f1 -> "["
+     * f2 -> Expression()
+     * f3 -> "]"
+     * f4 -> "="
+     * f5 -> Expression()
+     * f6 -> ";"
+     */
+    @Override
+    public String visit(ArrayAssignmentStatement n, String argu) throws Exception {
+        Variable arr = symbolTable.getVarOrField(n.f0.accept(this, null));
+        String ptr = emitter.rvalue(currentClass, arr.type, arr.name);
+        emitter.arrayAssignment(arr.type, ptr, n.f2.accept(this, null), n.f5.accept(this, null));
+        return null;
+    }
+
+    /**
+     * Grammar production:
+     * f0 -> PrimaryExpression()
+     * f1 -> "["
+     * f2 -> PrimaryExpression()
+     * f3 -> "]"
+     */
+    @Override
+    public String visit(ArrayLookup n, String argu) throws Exception {
+        String type = n.f0.accept(this, "getType");
+        String reg = n.f0.accept(this, null);
+        String idx = n.f2.accept(this, null);
+        return emitter.arrayLookup(type, reg, idx);
+    }
+
     @Override
     public String visit(AllocationExpression n, String getType) throws Exception {
         String type = n.f1.accept(this, null);
@@ -262,14 +295,6 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         String first = n.f0.accept(this, null);
         String second = n.f2.accept(this, null);
         return emitter.binaryOperation("slt", first, second);
-    }
-
-    // Array related methods
-
-    @Override
-    public String visit(ArrayLookup n, String argu) throws Exception {
-        // TODO
-        return null;
     }
 
     @Override
