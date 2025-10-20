@@ -195,9 +195,22 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         return null; // TODO
     }
 
+    /**
+     * Grammar production:
+     * f0 -> "new"
+     * f1 -> "int"
+     * f2 -> "["
+     * f3 -> Expression()
+     * f4 -> "]"
+     */
+    public String visit(IntegerArrayAllocationExpression n, String argu) throws Exception {
+        String size = n.f3.accept(this, null);
+        return emitter.allocateIntArray(size);
+    }
+
     @Override
     public String visit(ArrayAllocationExpression n, String argu) throws Exception {
-        return null; // TODO
+        return n.f0.accept(this, null);
     }
 
     @Override
@@ -256,9 +269,10 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
 
     @Override
     public String visit(ArrayLength n, String argu) throws Exception {
-        // TODO
-        // this one needs some thinking, maybe store array lengths somewhere (will also be used for bounds checking)
-        return null;
+
+        String type = n.f0.accept(this, "getType");
+        String reg = n.f0.accept(this, null);
+        return emitter.arrayLength(reg, type);
     }
 
         /**

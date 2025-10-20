@@ -8,16 +8,14 @@ public class Class {
     public final Class superClass;
     public ArrayList<Variable> fields;
     public ArrayList<Method> methods;
+    public ArrayList<Method> vtable;
 
     public Class (String name, Class superClass) {
         this.name = name;
         this.superClass = superClass;
         this.methods = new ArrayList<>();
-        this.fields = new ArrayList<>();;
-    }
-
-    public ArrayList<Method> getVtable() {
-        return new ArrayList<>();
+        this.fields = new ArrayList<>();
+        this.vtable = new ArrayList<>();
     }
 
     public int getOffset(String field) {

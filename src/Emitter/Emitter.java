@@ -56,9 +56,8 @@ public class Emitter {
 
     public String call(String objectReg, Class c, Method m, java.util.ArrayList<String> args) throws Exception {
         String ret = newRegister();
-        ArrayList<Method> vtable = c.getVtable();
-        int vtOffset = IntStream.range(0, vtable.size())
-                .filter(i -> vtable.get(i).name.equals(m.name))
+        int vtOffset = IntStream.range(0, c.vtable.size())
+                .filter(i -> c.vtable.get(i).name.equals(m.name))
                 .findFirst()
                 .orElse(-1);
 
@@ -160,17 +159,41 @@ public class Emitter {
         emitLine(String.format("%s = call i8* @calloc(i32 1, i32 %d)", allocReg, c.getSize()));
 
         String tmp = newRegister();
-        int vt_size = c.getVtable().size();
+        int vt_size = c.vtable.size();
         emitLine(String.format("%s = bitcast i8* %s to [%d x i8*]**", tmp, allocReg, vt_size));
         emitLine(String.format("store [%d x i8*]* @.%s_vtable, [%d x i8*]** %s", vt_size, c.name, vt_size, tmp));
 
         return allocReg;
     }
 
+    public String allocateIntArray(String size) throws Exception {
+        // first element is array length
+        String size_ = newRegister();
+        emitLine(String.format("%s = add i32 %s, 1", size_, size));
+
+        String tmp = newRegister();
+        emitLine(String.format("%s = call i8* @calloc(i32 %s, i32 4)", tmp, size_));
+        String ptr = newRegister();
+        emitLine(String.format("%s = bitcast i8* %s to i32*", ptr, tmp));
+        emitLine(String.format("store i32 %s, i32* %s", size, ptr));
+
+        return ptr;
+    }
+
+    public String arrayLength(String ptr, String type) throws IOException {
+        String type_ = typeToLLVM(type);
+//        emitLine(String.format("%s = load %s, %s* %s", ptr, type_, type_, reg));
+        // TODO: if boolean array, bitcast to i32*
+
+        String size = newRegister();
+        emitLine(String.format("%s = load i32, i32* %s", size, ptr));
+        return size;
+    }
+
     public void VTable(Class c) throws IOException {
         StringBuilder methodDecls = new StringBuilder();
-        int methodCount = buildMethodDecls(c, methodDecls, c.getVtable());
-        emitLine(String.format("@.%s_vtable = global [%d x i8*] [%s]\n", c.name, methodCount, methodDecls));
+        c.vtable = buildMethodDecls(c, methodDecls, c.vtable);
+        emitLine(String.format("@.%s_vtable = global [%d x i8*] [%s]\n", c.name, c.vtable.size(), methodDecls));
     }
 
     public void printInt(String reg) throws IOException {
@@ -223,14 +246,12 @@ public class Emitter {
         };
     }
 
-    private int buildMethodDecls(Class c, StringBuilder methodDecls, ArrayList<Method> vtable) {
-        int cnt = 0;
+    private ArrayList<Method> buildMethodDecls(Class c, StringBuilder methodDecls, ArrayList<Method> vtable) {
         for (Method m : c.getMethods()) {
             if (vtable.stream().anyMatch(x -> x.name.equals(m.name)))
                 continue;
 
             vtable.add(m);
-            cnt++;
 
             var args = new StringBuilder();
             for (Variable a : m.parameters)
@@ -242,6 +263,6 @@ public class Emitter {
             if (methodDecls.length() > 0) methodDecls.append(", ");
             methodDecls.append(decl);
         }
-        return cnt;
+        return vtable;
     }
 }
