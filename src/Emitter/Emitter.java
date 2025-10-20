@@ -121,6 +121,20 @@ public class Emitter {
         emitLine(String.format("store %s %s, %s* %s\n", typeToLLVM(type), value_reg, typeToLLVM(type), lhs_reg));
     }
 
+    public String emitAllocation(String type) throws Exception {
+        Class c = symbolTable.getClass(type);
+
+        String allocReg = newRegister();
+        emitLine(String.format("%s = call i8* @calloc(i32 1, i32 %d)", allocReg, c.getSize()));
+
+        String tmp = newRegister();
+        int vt_size = classToVtable.get(c.name).size();
+        emitLine(String.format("%s = bitcast i8* %s to [%d x i8*]**", tmp, allocReg, vt_size));
+        emitLine(String.format("store [%d x i8*]* @.%s_vtable, [%d x i8*]** %s", vt_size, type, vt_size, tmp));
+
+        return allocReg;
+    }
+
     public void emitVTables() throws IOException {
         outFile.write(String.format("@.%s_vtable = global [0 x i8*] []\n", symbolTable.main.name).getBytes());
         for (Class c : symbolTable.getClasses()) {

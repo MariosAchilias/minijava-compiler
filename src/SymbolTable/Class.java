@@ -67,12 +67,10 @@ public class Class {
     public Variable getField(String id) {return fields.get(id);}
 
     public int getSize() {
-        int size = superClass != null ? superClass.getSize() : 0;
-        size += fields.getValues().size();
-        for (Method m: methods.getValues()) {
-            boolean isOverride = (this.getLocalMethod(m.id) != null) && (superClass.getMethod(m.id) != null);
-            if (!isOverride)
-                size += 8;
+        // first 8 bytes hold vtable pointer
+        int size = superClass == null ? 8 : superClass.getSize();
+        for (Variable v: fields.getValues()) {
+            size += sizeOf(v.varType);
         }
         return size;
     }

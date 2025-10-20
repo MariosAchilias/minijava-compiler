@@ -165,7 +165,8 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
 
     @Override
     public String visit(AllocationExpression n, String argu) throws Exception {
-        return null; // TODO
+        String type = n.f1.accept(this, null);
+        return emitter.emitAllocation(type);
     }
 
     // Expressions
