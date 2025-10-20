@@ -84,7 +84,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     public String visit(ClassExtendsDeclaration n, String argu) throws Exception {
         String className = n.f1.accept(this, null);
         currentClass = symbolTable.getClass(className);
-        n.f4.accept(this, className);
+        n.f6.accept(this, className);
         return null;
     }
 
@@ -164,9 +164,11 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         Method m = c.getMethod(n.f2.accept(this, null));
 
         ArrayList<String> args = new ArrayList<>();
-        String argNames = n.f4.accept(this, argu); // semicolon-separated "type,register" pairs
-        for (String s: argNames.split(";"))
-            args.add(s);
+        if (n.f4.present()) {
+            String argNames = n.f4.accept(this, null); // semicolon-separated "type,register" pairs
+            for (String s: argNames.split(";"))
+                args.add(s);
+        }
 
         return emitter.emitCall(reg, c, m, args);
     }

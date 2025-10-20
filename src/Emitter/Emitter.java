@@ -3,6 +3,7 @@ package Emitter;
 import SymbolTable.*;
 import SymbolTable.Class;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 final class Vtable extends LinkedHashMap<String, Integer> {}; // method name -> offset
@@ -224,18 +225,11 @@ public class Emitter {
     }
 
     private int buildMethodDecls(Class c, StringBuilder methodDecls, Vtable vtable) {
-        if (c == null)
-            return 0;
-
-        int cnt = buildMethodDecls(c.getParent(), methodDecls, vtable);
-
+        int cnt = 0;
         for (Method m : c.getMethods()) {
-            boolean isOverride = c.getParent() == null
-                                ? false
-                                : (c.getLocalMethod(m.id) != null) && (c.getParent().getMethod(m.id) != null);
-            if (isOverride)
+            if (vtable.get(m.id) != null)
                 continue;
-            
+
             vtable.put(m.id, cnt++);
 
             var args = new StringBuilder();
@@ -244,11 +238,10 @@ public class Emitter {
 
             // All methods have a 'this' pointer as their first argument
             String signature = String.format("%s (i8*%s)", typeToLLVM(m.returnType), args.toString()); 
-            String decl = String.format("i8* bitcast (%s* @%s_%s to i8*)", signature, c.name, m.id);
+            String decl = String.format("i8* bitcast (%s* @%s_%s to i8*)", signature, c.inheritedFrom(m.id), m.id);
             if (methodDecls.length() > 0) methodDecls.append(", ");
             methodDecls.append(decl);
         }
-        
         return cnt;
     }
 }

@@ -44,7 +44,11 @@ public class Class {
     }
 
     public ArrayList<Method> getMethods () {
-        return methods.getValues();
+        ArrayList<Method> methods = new ArrayList<>();
+        for (Class c = this; c != null; c = c.superClass) {
+            methods.addAll(c.methods.getValues());
+        }
+        return methods;
     }
 
     public Method getMethod (String name) {
@@ -52,6 +56,14 @@ public class Class {
             Method m = c.getLocalMethod(name);
             if (m != null)
                 return m;
+        }
+        return null;
+    }
+
+    public String inheritedFrom (String name) {
+        for (Class c = this; c != null; c = c.superClass) {
+            if (c.getLocalMethod(name) != null)
+                return c.name;
         }
         return null;
     }
