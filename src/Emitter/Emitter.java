@@ -11,23 +11,15 @@ import java.util.stream.Stream;
 
 public class Emitter {
     FileOutputStream outFile;
-    int registerCount = 0;
-    int indentation = 0;
+    private int registerCount = 0;
+    private int labelCount = 0;
+    private int indentation = 0;
     LinkedHashMap<String, String> variableToRegister = null;
     public Emitter(FileOutputStream outFile) {
         this.outFile = outFile;
     }
 
-    public String newRegister () {
-        return "%_" + registerCount++;
-    }
-
-    private void emitLine(String line) throws IOException {
-        String s = "\t".repeat(indentation) + line + "\n";
-        outFile.write(s.getBytes());
-    }
-
-    public void emitMethodStart(Class c, Method m) throws IOException {
+    public void methodStart(Class c, Method m) throws IOException {
         var args = new StringBuilder();
         for (Variable a : m.parameters) {
             args.append(String.format(", %s %%%s", typeToLLVM(a.type), a.name));
@@ -55,14 +47,14 @@ public class Emitter {
 
     }
 
-    public void emitMethodEnd(Method m, String ret) throws IOException {
+    public void methodEnd(Method m, String ret) throws IOException {
         emitLine(String.format("ret %s %s", typeToLLVM(m.returnType), ret));
         outFile.write("}\n".getBytes());
         variableToRegister = null;
         indentation--;
     }
 
-    public String emitCall(String objectReg, Class c, Method m, java.util.ArrayList<String> args) throws Exception {
+    public String call(String objectReg, Class c, Method m, java.util.ArrayList<String> args) throws Exception {
         String ret = newRegister();
         ArrayList<Method> vtable = c.getVtable();
         int vtOffset = IntStream.range(0, vtable.size())
@@ -103,7 +95,7 @@ public class Emitter {
         return ret;
     }
 
-    public String emitBinaryOperation(String operator, String leftOperand, String rightOperand) throws IOException {
+    public String binaryOperation(String operator, String leftOperand, String rightOperand) throws IOException {
         String reg = newRegister();
         if (operator.equals("slt")) {
             emitLine(String.format("%s = icmp slt i32 %s, %s", reg, leftOperand, rightOperand));
@@ -115,7 +107,7 @@ public class Emitter {
         return reg;
     }
 
-    public String emitLvalueAddressOf(Class class_, String id) throws Exception {
+    public String lvalueAddressOf(Class class_, String id) throws Exception {
         // Return register containing address of lvalue
         String reg = variableToRegister.get(id);
         if (reg != null)
@@ -134,7 +126,7 @@ public class Emitter {
         return ret;
     }
 
-    public String emitRvalue(Class class_, String type, String id) throws Exception {
+    public String rvalue(Class class_, String type, String id) throws Exception {
         String llvmType = typeToLLVM(type);
         // Return register containing value
         String reg = variableToRegister.get(id);
@@ -159,11 +151,11 @@ public class Emitter {
         return ret;
     }
 
-    public void emitAssignment(String type, String lhs_reg, String value_reg) throws IOException {
+    public void assignment(String type, String lhs_reg, String value_reg) throws IOException {
         emitLine(String.format("store %s %s, %s* %s\n", typeToLLVM(type), value_reg, typeToLLVM(type), lhs_reg));
     }
 
-    public String emitObjectAllocation(Class c) throws Exception {
+    public String objectAllocation(Class c) throws Exception {
         String allocReg = newRegister();
         emitLine(String.format("%s = call i8* @calloc(i32 1, i32 %d)", allocReg, c.getSize()));
 
@@ -175,17 +167,17 @@ public class Emitter {
         return allocReg;
     }
 
-    public void emitVTable(Class c) throws IOException {
+    public void VTable(Class c) throws IOException {
         StringBuilder methodDecls = new StringBuilder();
         int methodCount = buildMethodDecls(c, methodDecls, c.getVtable());
         emitLine(String.format("@.%s_vtable = global [%d x i8*] [%s]\n", c.name, methodCount, methodDecls));
     }
 
-    public void emitPrintInt(String reg) throws IOException {
+    public void printInt(String reg) throws IOException {
         emitLine(String.format("call void @print_int(i32 %s)", reg));
     }
 
-    public void emitHelpers() throws IOException {
+    public void helpers() throws IOException {
         outFile.write(("""
                        declare i8* @calloc(i32, i32)
                        declare i32 @printf(i8*, ...)
@@ -206,6 +198,19 @@ public class Emitter {
                            ret void
                        }""").getBytes());
     };
+
+    private String newRegister () {
+        return "%_" + registerCount++;
+    }
+
+    private String newLabel () {
+        return "label_" + labelCount++;
+    }
+
+    private void emitLine(String line) throws IOException {
+        String s = "\t".repeat(indentation) + line + "\n";
+        outFile.write(s.getBytes());
+    }
 
     private static String typeToLLVM(String type) {
         return switch (type) {

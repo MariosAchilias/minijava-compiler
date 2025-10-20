@@ -20,9 +20,9 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(Goal n, String argu) throws Exception {
         for (Class c : symbolTable.classes)
-            emitter.emitVTable(c);
+            emitter.VTable(c);
 
-        emitter.emitHelpers();
+        emitter.helpers();
         n.f0.accept(this, null);
         n.f1.accept(this, null);
         return null;
@@ -52,9 +52,9 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         currentClass = symbolTable.main;
         symbolTable.enterClass(symbolTable.main);
         Method m = new Method ("void", "main", new ArrayList<>());
-        emitter.emitMethodStart(currentClass, m);
+        emitter.methodStart(currentClass, m);
         n.f15.accept(this, null);
-        emitter.emitMethodEnd(m, "");
+        emitter.methodEnd(m, "");
         symbolTable.exitClass();
         return null;
     }
@@ -109,12 +109,12 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         String id = n.f0.accept(this, null);
         String type = symbolTable.getVarOrField(id).type;
         
-        String lhs = emitter.emitLvalueAddressOf(currentClass, id);
+        String lhs = emitter.lvalueAddressOf(currentClass, id);
         String rhs = n.f2.accept(this, null);
 
         // lhs is register that contains memory location of lvalue
         // rhs is register that contains value
-        emitter.emitAssignment(type, lhs, rhs);
+        emitter.assignment(type, lhs, rhs);
 
         return null;
     }
@@ -138,12 +138,12 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     public String visit(MethodDeclaration n, String className) throws Exception {
         String methodName = n.f2.accept(this, null);
         Method m = symbolTable.getClass(className).getMethod(methodName);
-        emitter.emitMethodStart(currentClass, m);
+        emitter.methodStart(currentClass, m);
         symbolTable.enterMethod(m);
 
         n.f8.accept(this, null);
 
-        emitter.emitMethodEnd(m, n.f10.accept(this, null));
+        emitter.methodEnd(m, n.f10.accept(this, null));
 
         symbolTable.exitMethod();
         return null;
@@ -151,7 +151,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
 
     @Override
     public String visit(PrintStatement n, String argu) throws Exception {
-        emitter.emitPrintInt(n.f2.accept(this, null));
+        emitter.printInt(n.f2.accept(this, null));
 
         return null;
     }
@@ -180,7 +180,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
                 args.add(s);
         }
 
-        return emitter.emitCall(reg, c, m, args);
+        return emitter.call(reg, c, m, args);
     }
 
     // Non-trivial leaf nodes
@@ -206,7 +206,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         if (getType != null)
             return type;
 
-        return emitter.emitObjectAllocation(symbolTable.getClass(type));
+        return emitter.objectAllocation(symbolTable.getClass(type));
     }
 
     // Expressions
@@ -215,35 +215,35 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     public String visit(PlusExpression n, String argu) throws Exception {
         String first = n.f0.accept(this, null);
         String second = n.f2.accept(this, null);
-        return emitter.emitBinaryOperation("add", first, second);
+        return emitter.binaryOperation("add", first, second);
     }
 
     @Override
     public String visit(MinusExpression n, String argu) throws Exception {
         String first = n.f0.accept(this, null);
         String second = n.f2.accept(this, null);
-        return emitter.emitBinaryOperation("add", first, second);
+        return emitter.binaryOperation("add", first, second);
     }
 
     @Override
     public String visit(TimesExpression n, String argu) throws Exception {
         String first = n.f0.accept(this, null);
         String second = n.f2.accept(this, null);
-        return emitter.emitBinaryOperation("mul", first, second);
+        return emitter.binaryOperation("mul", first, second);
     }
 
     @Override
     public String visit(AndExpression n, String argu) throws Exception {
         String first = n.f0.accept(this, null);
         String second = n.f2.accept(this, null);
-        return emitter.emitBinaryOperation("and", first, second);
+        return emitter.binaryOperation("and", first, second);
     }
 
     @Override
     public String visit(CompareExpression n, String argu) throws Exception {
         String first = n.f0.accept(this, null);
         String second = n.f2.accept(this, null);
-        return emitter.emitBinaryOperation("slt", first, second);
+        return emitter.binaryOperation("slt", first, second);
     }
 
     // Array related methods
@@ -286,7 +286,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
             return var.type;
         }
 
-        return emitter.emitRvalue(currentClass, var.type, n.f0.accept(this, null));
+        return emitter.rvalue(currentClass, var.type, n.f0.accept(this, null));
     }
 
     // Trivial methods
