@@ -48,7 +48,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     public String visit(MainClass n, String argu) throws Exception {
         currentClass = symbolTable.main;
         Method m = new Method ("void", "main", new ArrayList<>(), null);
-        emitter.emitMethodStart(m);
+        emitter.emitMethodStart(currentClass, m);
         n.f15.accept(this, null);
         emitter.emitMethodEnd(m, "");
         return null;
@@ -129,7 +129,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     public String visit(MethodDeclaration n, String className) throws Exception {
         String methodName = n.f2.accept(this, null);
         Method m = symbolTable.getMethod(methodName, className);
-        emitter.emitMethodStart(m);
+        emitter.emitMethodStart(currentClass, m);
         symbolTable.enterScope(m.getLocalScope());
 
         n.f8.accept(this, null);
@@ -144,6 +144,28 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         emitter.emitPrintInt(n.f2.accept(this, null));
 
         return null;
+    }
+
+    /**
+     * Grammar production:
+     * f0 -> PrimaryExpression()
+     * f1 -> "."
+     * f2 -> Identifier()
+     * f3 -> "("
+     * f4 -> ( ExpressionList() )?
+     * f5 -> ")"
+     */
+    @Override
+    public String visit(MessageSend n, String argu) throws Exception {
+
+        String type = n.f0.accept(this, "getType");
+        System.out.println(String.format("Messagesend type: %s", type));
+        String reg = n.f0.accept(this, null);
+        Class c = symbolTable.getClass(type);
+        Method m = c.getMethod(n.f2.accept(this, null));
+        ArrayList<Variable> args = new ArrayList<>();
+        // TODO populate args
+        return emitter.emitCall(reg, c, m, args);
     }
 
     // Non-trivial leaf nodes
@@ -164,8 +186,11 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     }
 
     @Override
-    public String visit(AllocationExpression n, String argu) throws Exception {
+    public String visit(AllocationExpression n, String getType) throws Exception {
         String type = n.f1.accept(this, null);
+        if (getType != null)
+            return type;
+
         return emitter.emitAllocation(type);
     }
 
@@ -233,9 +258,18 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
      *       | BracketExpression()
      */
     @Override
-    public String visit(PrimaryExpression n, String argu) throws Exception {
+    public String visit(PrimaryExpression n, String getType) throws Exception {
         if (n.f0.which != 3) // Not identifier
-            return n.f0.accept(this, null);
+            return n.f0.accept(this, getType);
+
+        if (getType != null) {
+            String id = n.f0.accept(this, getType);
+            Variable var = symbolTable.getLocalVar(id);
+            if (var == null)
+                var = currentClass.getField(id);
+
+            return var.varType;
+        }
 
         return emitter.emitRvalue(currentClass, n.f0.accept(this, null));
     }
@@ -244,12 +278,12 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(Expression n, String argu) throws Exception {
         // Used for rvalues, returns register that contains the result of the expression evaluation
-        return n.f0.accept(this, null);
+        return n.f0.accept(this, argu);
     }
 
     @Override
     public String visit(Clause n, String argu) throws Exception {
-        return n.f0.accept(this, null);
+        return n.f0.accept(this, argu);
     }
 
     @Override
@@ -269,7 +303,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
 
     @Override
     public String visit(BracketExpression n, String argu) throws Exception {
-        return n.f1.accept(this, null);
+        return n.f1.accept(this, argu);
     }
 
 }

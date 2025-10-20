@@ -28,15 +28,18 @@ public class Emitter {
         outFile.write(s.getBytes());
     }
 
-    public void emitMethodStart(Method m) throws IOException {
+    public void emitMethodStart(Class c, Method m) throws IOException {
         var args = new StringBuilder();
         for (Variable a : m.parameters) {
             args.append(String.format(", %s %%%s", typeToLLVM(a.varType), a.id));
         }
-        
-        // All methods have a 'this' pointer as their first argument
-        String def = String.format("\ndefine %s @%s(i8* %%this %s) {\n", typeToLLVM(m.returnType), m.id, args.toString());
-        emitLine(def);
+
+        if (c == symbolTable.main && m.id.equals("main")) {
+            emitLine(String.format("\ndefine void @main() {\n")); // TODO main args
+        } else {
+            // All methods have a 'this' pointer as their first argument
+            emitLine(String.format("\ndefine %s @%s_%s(i8* %%this %s) {\n", typeToLLVM(m.returnType), c.name, m.id, args.toString()));
+        }
         indentation++;
         variableToRegister = new LinkedHashMap<>();
 
@@ -58,6 +61,31 @@ public class Emitter {
         outFile.write("}\n".getBytes());
         variableToRegister = null;
         indentation--;
+    }
+
+    public String emitCall(String objectReg, Class c, Method m, java.util.ArrayList<Variable> args) throws IOException {
+        String ret = newRegister();
+        int vtOffset = classToVtable.get(c.name).get(m.id);
+
+        // object layout in memory: {i8** vtable_ptr : 8 bytes, fields}
+        String tmp = newRegister();
+        emitLine(String.format("%s = bitcast i8* %s to i8***", tmp, objectReg));
+        String tmp_ = newRegister();
+        emitLine(String.format("%s = load i8**, i8*** %s", tmp_, tmp));
+        tmp = newRegister();
+        emitLine(String.format("%s = getelementptr i8*, i8** %s, i32 %d", tmp, tmp_, vtOffset));
+        tmp_ = newRegister();
+        emitLine(String.format("%s = load i8*, i8** %s", tmp_, tmp));
+
+        String funcPtr = newRegister();
+        String argTypes = ""; // TODO
+        String retType = typeToLLVM(m.returnType);
+        emitLine(String.format("%s = bitcast i8* %s to %s(%s)*", funcPtr, tmp_, retType, argTypes));
+
+        String argRegs = ""; // TODO
+        emitLine(String.format("%s = call %s %s(%s)", ret, retType, funcPtr, argRegs));
+
+        return ret;
     }
 
     public String emitBinaryOperation(String operator, String leftOperand, String rightOperand) throws IOException {
@@ -204,7 +232,7 @@ public class Emitter {
 
             // All methods have a 'this' pointer as their first argument
             String signature = String.format("%s (i8*%s)", typeToLLVM(m.returnType), args.toString()); 
-            String decl = String.format("i8* bitcast (%s* @%s to i8*)", signature, m.id);
+            String decl = String.format("i8* bitcast (%s* @%s_%s to i8*)", signature, c.name, m.id);
             if (methodDecls.length() > 0) methodDecls.append(", ");
             methodDecls.append(decl);
         }

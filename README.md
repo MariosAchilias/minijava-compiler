@@ -24,9 +24,9 @@ clang source.ll -o executable # Output native binary
 ## TODOs
 - [ ] Arrays
 - [ ] Method calls
-- [ ] Allocation statements
-- [ ] Assignments
+- [X] Allocation statements
+- [X] Assignments
 - [ ] Misc (e.g. "this" pointer)
-- [ ] Fix problems with main method
+- [ ] Fix problems with main method (e.g. argv)
 - [ ] Fix method names in IR (append class name)
 - [ ] General code cleanup
