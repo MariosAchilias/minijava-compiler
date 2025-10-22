@@ -106,6 +106,12 @@ public class Emitter {
         return reg;
     }
 
+    public String not(String operand) throws IOException {
+        String reg = newRegister();
+        emitLine(String.format("%s = xor i1 %s, 1", reg, operand));
+        return reg;
+    }
+
     public String lvalueAddressOf(Class class_, String id) throws Exception {
         // Return register containing address of lvalue
         String reg = variableToRegister.get(id);
@@ -124,21 +130,16 @@ public class Emitter {
         return ret;
     }
 
-    public void beginIf(String condReg, String labelIf, String labelElse) throws IOException {
+    public void branch(String condReg, String labelIf, String labelElse) throws IOException {
         emitLine(String.format("br i1 %s, label %%%s, label %%%s", condReg, labelIf, labelElse));
-        outFile.write((labelIf + ":\n").getBytes());
-    }
-    
-    public void endIf(String labelEnd) throws IOException {
-        emitLine(String.format("br %%%s", labelEnd));
     }
 
-    public void beginElse(String labelElse) throws IOException {
-        outFile.write((labelElse + ":\n").getBytes());
+    public void branch(String label) throws IOException {
+        emitLine(String.format("br label %%%s", label));
     }
     
-    public void endElse(String labelEnd) throws IOException {
-        outFile.write((labelEnd + ":\n").getBytes());
+    public void putLabel(String label) throws IOException {
+        outFile.write((label + ":\n").getBytes());
     }
 
     public String rvalue(Class class_, String type, String id) throws Exception {

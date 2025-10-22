@@ -163,12 +163,38 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         String If = emitter.newLabel();
         String Else = emitter.newLabel();
         String End = emitter.newLabel();
-        emitter.beginIf(n.f2.accept(this, null), If, Else);
+        emitter.branch(n.f2.accept(this, null), If, Else);
+        emitter.putLabel(If);
         n.f4.accept(this, null);
-        emitter.endIf(End);
-        emitter.beginElse(Else);
+        emitter.branch(End);
+        emitter.putLabel(Else);
         n.f6.accept(this, null);
-        emitter.endElse(End);
+        emitter.branch(End);
+        emitter.putLabel(End);
+        return null;
+    }
+
+    /**
+    * Grammar production:
+    * f0 -> "while"
+    * f1 -> "("
+    * f2 -> Expression()
+    * f3 -> ")"
+    * f4 -> Statement()
+    */
+    @Override
+    public String visit(WhileStatement n, String argu) throws Exception {
+        String condCheck = emitter.newLabel();
+        String start = emitter.newLabel();
+        String end = emitter.newLabel();
+        emitter.branch(condCheck);
+        emitter.putLabel(condCheck);
+        n.f2.accept(this, null);
+        emitter.branch(n.f2.accept(this, null), start, end);
+        emitter.putLabel(start);
+        n.f4.accept(this, null);
+        emitter.branch(condCheck);
+        emitter.putLabel(end);
         return null;
     }
 
@@ -216,6 +242,11 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(ThisExpression n, String argu) throws Exception {
         return null; // TODO
+    }
+
+    @Override
+    public String visit(NotExpression n, String argu) throws Exception {
+        return emitter.not(n.f1.accept(this, null));
     }
 
     /**
