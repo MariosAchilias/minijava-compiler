@@ -215,9 +215,10 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
      * f5 -> ")"
      */
     @Override
-    public String visit(MessageSend n, String argu) throws Exception {
-
+    public String visit(MessageSend n, String getType) throws Exception {
         String type = n.f0.accept(this, "getType");
+        if (getType != null)
+            return type;
         String reg = n.f0.accept(this, null);
         Class c = symbolTable.getClass(type);
         Method m = c.getMethod(n.f2.accept(this, null));
@@ -240,8 +241,8 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     }
 
     @Override
-    public String visit(ThisExpression n, String argu) throws Exception {
-        return null; // TODO
+    public String visit(ThisExpression n, String getType) throws Exception {
+        return "%this";
     }
 
     @Override
@@ -257,19 +258,23 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
      * f3 -> Expression()
      * f4 -> "]"
      */
-    public String visit(IntegerArrayAllocationExpression n, String argu) throws Exception {
+    public String visit(IntegerArrayAllocationExpression n, String getType) throws Exception {
+        if (getType != null)
+            return "int[]";
         String size = n.f3.accept(this, null);
         return emitter.allocateIntArray(size);
     }
 
-    public String visit(BooleanArrayAllocationExpression n, String argu) throws Exception {
+    public String visit(BooleanArrayAllocationExpression n, String getType) throws Exception {
+        if (getType != null)
+            return "boolean[]";
         String size = n.f3.accept(this, null);
         return emitter.allocateBoolArray(size);
     }
 
     @Override
-    public String visit(ArrayAllocationExpression n, String argu) throws Exception {
-        return n.f0.accept(this, null);
+    public String visit(ArrayAllocationExpression n, String getType) throws Exception {
+        return n.f0.accept(this, getType);
     }
 
     /**

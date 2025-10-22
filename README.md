@@ -24,7 +24,5 @@ clang source.ll -o executable # Output native binary
 ## TODOs
 - [ ] Array runtime bounds checks
 - [ ] && short-circuiting
-- [ ] loops
-- [ ] Misc (e.g. "this" pointer)
-- [ ] NotExpression
+- [ ] Test more edge cases
 - [ ] Fix problems with main method (e.g. argv)

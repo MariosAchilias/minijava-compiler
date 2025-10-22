@@ -44,7 +44,6 @@ public class Emitter {
             if (m.parameters.contains(a))
                 emitLine(String.format("store %s %s, %s* %s\n", type, "%" + a.name, type, reg));
         }
-
     }
 
     public void methodEnd(Method m, String ret) throws IOException {
@@ -85,7 +84,6 @@ public class Emitter {
             // a contains comma separated type and register
             String type = typeToLLVM(a.split(",")[0]);
             String reg = a.split(",")[1];
-            System.out.println(String.format("type of arg: %s", type));
             argRegs.append(String.format(", %s %s", type, reg));
         }
 
@@ -152,19 +150,23 @@ public class Emitter {
             emitLine(String.format("%s = load %s, %s* %s", ret, llvmType, llvmType, reg));
             return ret;
         }
-                
-        // Is instance variable
-        String tmp = newRegister();
-        emitLine(String.format("%s = getelementptr i8, i8* %%this, i32 %d", tmp, class_.getOffset(id)));
 
-        String tmp_ = newRegister();
-        emitLine(String.format("%s = bitcast i8* %s to %s*", tmp_, tmp, llvmType));
+        if (class_.getOffset(id) != -1) {
+            // Is instance variable
+            String tmp = newRegister();
+            emitLine(String.format("%s = getelementptr i8, i8* %%this, i32 %d", tmp, class_.getOffset(id)));
 
-        String ret = newRegister();
-        emitLine(String.format("%s = load %s, %s* %s", ret, llvmType, llvmType, tmp_));
-        // TODO: array elements
+            String tmp_ = newRegister();
+            emitLine(String.format("%s = bitcast i8* %s to %s*", tmp_, tmp, llvmType));
 
-        return ret;
+            String ret = newRegister();
+            emitLine(String.format("%s = load %s, %s* %s", ret, llvmType, llvmType, tmp_));
+            return ret;
+        }
+
+        // Is temporary rvalue
+
+        return null;
     }
 
     public void assignment(String type, String lhs_reg, String value_reg) throws IOException {
