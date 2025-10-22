@@ -22,11 +22,9 @@ clang source.ll -o executable # Output native binary
 ```
 
 ## TODOs
-- [ ] Arrays
-- [X] Method calls
-- [X] Allocation statements
-- [X] Assignments
+- [ ] Array runtime bounds checks
+- [ ] && short-circuiting
+- [ ] if statements
+- [ ] loops
 - [ ] Misc (e.g. "this" pointer)
 - [ ] Fix problems with main method (e.g. argv)
-- [X] Fix method names in IR (append class name)
-- [ ] General code cleanup

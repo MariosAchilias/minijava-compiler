@@ -4,7 +4,6 @@ import Parser.visitor.*;
 import SymbolTable.*;
 import SymbolTable.Class;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 
 class EmitIRVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
@@ -149,6 +148,30 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
         return null;
     }
 
+    /**
+    * Grammar production:
+    * f0 -> "if"
+    * f1 -> "("
+    * f2 -> Expression()
+    * f3 -> ")"
+    * f4 -> Statement()
+    * f5 -> "else"
+    * f6 -> Statement()
+    */
+    @Override
+    public String visit(IfStatement n, String argu) throws Exception {
+        String If = emitter.newLabel();
+        String Else = emitter.newLabel();
+        String End = emitter.newLabel();
+        emitter.beginIf(n.f2.accept(this, null), If, Else);
+        n.f4.accept(this, null);
+        emitter.endIf(End);
+        emitter.beginElse(Else);
+        n.f6.accept(this, null);
+        emitter.endElse(End);
+        return null;
+    }
+
     @Override
     public String visit(PrintStatement n, String argu) throws Exception {
         emitter.printInt(n.f2.accept(this, null));
@@ -285,6 +308,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
 
     @Override
     public String visit(AndExpression n, String argu) throws Exception {
+        // TODO: short-circuiting
         String first = n.f0.accept(this, null);
         String second = n.f2.accept(this, null);
         return emitter.binaryOperation("and", first, second);

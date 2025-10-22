@@ -121,8 +121,24 @@ public class Emitter {
         String ret = newRegister();
         emitLine(String.format("%s = bitcast i8* %s to %s*", ret, reg, typeToLLVM(type)));
 
-        // TODO: array assignment
         return ret;
+    }
+
+    public void beginIf(String condReg, String labelIf, String labelElse) throws IOException {
+        emitLine(String.format("br i1 %s, label %%%s, label %%%s", condReg, labelIf, labelElse));
+        outFile.write((labelIf + ":\n").getBytes());
+    }
+    
+    public void endIf(String labelEnd) throws IOException {
+        emitLine(String.format("br %%%s", labelEnd));
+    }
+
+    public void beginElse(String labelElse) throws IOException {
+        outFile.write((labelElse + ":\n").getBytes());
+    }
+    
+    public void endElse(String labelEnd) throws IOException {
+        outFile.write((labelEnd + ":\n").getBytes());
     }
 
     public String rvalue(Class class_, String type, String id) throws Exception {
@@ -271,11 +287,11 @@ public class Emitter {
                        }""").getBytes());
     };
 
-    private String newRegister () {
+    public String newRegister () {
         return "%_" + registerCount++;
     }
 
-    private String newLabel () {
+    public String newLabel () {
         return "label_" + labelCount++;
     }
 
