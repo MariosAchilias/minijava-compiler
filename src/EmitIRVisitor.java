@@ -50,10 +50,12 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     public String visit(MainClass n, String argu) throws Exception {
         currentClass = symbolTable.main;
         symbolTable.enterClass(symbolTable.main);
-        Method m = new Method ("void", "main", new ArrayList<>());
+        Method m = symbolTable.main.getMethod("main");
+        symbolTable.enterMethod(m);
         emitter.methodStart(currentClass, m);
         n.f15.accept(this, null);
         emitter.methodEnd(m, "");
+        symbolTable.exitMethod();
         symbolTable.exitClass();
         return null;
     }

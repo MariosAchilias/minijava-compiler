@@ -3,9 +3,8 @@ import Parser.syntaxtree.*;
 import Parser.visitor.*;
 import SymbolTable.*;
 import SymbolTable.Class;
-import java.util.ArrayList;
-
 import static SymbolTable.Variable.isBuiltin;
+import java.util.ArrayList;
 
 class TypeCheckVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
@@ -15,8 +14,10 @@ class TypeCheckVisitor extends GJDepthFirst<String, String>{
 
     public String visit(MainClass n, String argu) throws Exception {
         symbolTable.enterClass(symbolTable.main);
+        symbolTable.enterMethod(symbolTable.main.getMethod("main"));
         /* f15 -> ( Statement() ) */
         n.f15.accept(this, argu);
+        symbolTable.exitMethod();
         symbolTable.exitClass();
         return null;
     }

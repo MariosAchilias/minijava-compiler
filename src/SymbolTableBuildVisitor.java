@@ -1,8 +1,9 @@
+import Exceptions.SemanticException;
 import Parser.syntaxtree.*;
 import Parser.visitor.*;
-import Exceptions.SemanticException;
 import SymbolTable.*;
 import SymbolTable.Class;
+import java.util.ArrayList;
 
 class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
     SymbolTable symbolTable;
@@ -34,7 +35,11 @@ class SymbolTableBuildVisitor extends GJDepthFirst<String, String>{
         String name = n.f1.accept(this, null);
         symbolTable.main = new Class(name, null);
         symbolTable.enterClass(symbolTable.main);
+        Method m = new Method("void", "main", new ArrayList<>());
+        symbolTable.main.methods.add(m);
+        symbolTable.enterMethod(m);
         n.f14.accept(this, name);
+        symbolTable.exitMethod();
         symbolTable.exitClass();
 
         return null;

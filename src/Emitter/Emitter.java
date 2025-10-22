@@ -26,7 +26,7 @@ public class Emitter {
         }
 
         if (m.name.equals("main")) {
-            emitLine(String.format("\ndefine void @main() {\n")); // TODO main args
+            emitLine(String.format("\ndefine void @main() {\n"));
         } else {
             // All methods have a 'this' pointer as their first argument
             emitLine(String.format("\ndefine %s @%s_%s(i8* %%this %s) {\n", typeToLLVM(m.returnType), c.name, m.name, args.toString()));

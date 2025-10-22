@@ -61,7 +61,7 @@ public final class SymbolTable {
     }
 
     public Class getClass(String name) {
-        if (name == main.name)
+        if (name.equals(main.name))
             return main;
         return classes.stream()
                 .filter(c -> c.name.equals(name))

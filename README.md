@@ -25,4 +25,3 @@ clang source.ll -o executable # Output native binary
 - [ ] Array runtime bounds checks
 - [ ] && short-circuiting
 - [ ] Test more edge cases
-- [ ] Fix problems with main method (e.g. argv)
