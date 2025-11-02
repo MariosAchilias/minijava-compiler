@@ -14,7 +14,6 @@ public class Emitter {
     private int registerCount = 0;
     private int labelCount = 0;
     private int indentation = 0;
-    LinkedHashMap<String, String> variableToRegister = null;
     public Emitter(FileOutputStream outFile) {
         this.outFile = outFile;
     }
@@ -32,13 +31,12 @@ public class Emitter {
             emitLine(String.format("\ndefine %s @%s_%s(i8* %%this %s) {\n", typeToLLVM(m.returnType), c.name, m.name, args.toString()));
         }
         indentation++;
-        variableToRegister = new LinkedHashMap<>();
 
         // Allocate parameters & local variables
         for (Variable a : Stream.concat(m.localVars.stream(), m.parameters.stream()).collect(Collectors.toList())) {
             String type = typeToLLVM(a.type);
             String reg = newRegister();
-            variableToRegister.put(a.name, reg);
+            a.register = reg;
             emitLine(String.format("%s = alloca %s", reg, type));
             // For parameters, initialize to given values
             if (m.parameters.contains(a))
@@ -49,7 +47,9 @@ public class Emitter {
     public void methodEnd(Method m, String ret) throws IOException {
         emitLine(String.format("ret %s %s", typeToLLVM(m.returnType), ret));
         outFile.write("}\n".getBytes());
-        variableToRegister = null;
+        for (Variable a : Stream.concat(m.localVars.stream(), m.parameters.stream()).collect(Collectors.toList())) {
+            a.register = null;
+        }
         indentation--;
     }
 
@@ -110,17 +110,16 @@ public class Emitter {
         return reg;
     }
 
-    public String lvalueAddressOf(Class class_, String id) throws Exception {
+    public String lvalueAddressOf(Class class_, Variable var) throws Exception {
         // Return register containing address of lvalue
-        String reg = variableToRegister.get(id);
-        if (reg != null)
+        if (var.register != null)
             // Is a local variable or parameter
-            return reg;
+            return var.register;
                 
         // Is instance variable
-        reg = newRegister();
-        emitLine(String.format("%s = getelementptr i8, i8* %%this, i32 %d", reg, class_.getOffset(id)));
-        String type = class_.getField(id).type;
+        String reg = newRegister();
+        emitLine(String.format("%s = getelementptr i8, i8* %%this, i32 %d", reg, class_.getOffset(var.name)));
+        String type = var.type;
         
         String ret = newRegister();
         emitLine(String.format("%s = bitcast i8* %s to %s*", ret, reg, typeToLLVM(type)));
@@ -140,10 +139,10 @@ public class Emitter {
         outFile.write((label + ":\n").getBytes());
     }
 
-    public String rvalue(Class class_, String type, String id) throws Exception {
-        String llvmType = typeToLLVM(type);
+    public String rvalue(Class class_, Variable var) throws Exception {
+        String llvmType = typeToLLVM(var.type);
         // Return register containing value
-        String reg = variableToRegister.get(id);
+        String reg = var.register;
         if (reg != null) {
             // Is a local variable or parameter
             String ret = newRegister();
@@ -151,10 +150,10 @@ public class Emitter {
             return ret;
         }
 
-        if (class_.getOffset(id) != -1) {
+        if (class_.getOffset(var.name) != -1) {
             // Is instance variable
             String tmp = newRegister();
-            emitLine(String.format("%s = getelementptr i8, i8* %%this, i32 %d", tmp, class_.getOffset(id)));
+            emitLine(String.format("%s = getelementptr i8, i8* %%this, i32 %d", tmp, class_.getOffset(var.name)));
 
             String tmp_ = newRegister();
             emitLine(String.format("%s = bitcast i8* %s to %s*", tmp_, tmp, llvmType));

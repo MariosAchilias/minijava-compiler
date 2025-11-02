@@ -108,14 +108,14 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     public String visit(AssignmentStatement n, String argu) throws Exception {
         
         String id = n.f0.accept(this, null);
-        String type = symbolTable.getVarOrField(id).type;
-        
-        String lhs = emitter.lvalueAddressOf(currentClass, id);
+        Variable var = symbolTable.getVarOrField(id);
+
+        String lhs = emitter.lvalueAddressOf(currentClass, var);
         String rhs = n.f2.accept(this, null);
 
         // lhs is register that contains memory location of lvalue
         // rhs is register that contains value
-        emitter.assignment(type, lhs, rhs);
+        emitter.assignment(var.type, lhs, rhs);
 
         return null;
     }
@@ -292,7 +292,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
     @Override
     public String visit(ArrayAssignmentStatement n, String argu) throws Exception {
         Variable arr = symbolTable.getVarOrField(n.f0.accept(this, null));
-        String ptr = emitter.rvalue(currentClass, arr.type, arr.name);
+        String ptr = emitter.rvalue(currentClass, arr);
         emitter.arrayAssignment(arr.type, ptr, n.f2.accept(this, null), n.f5.accept(this, null));
         return null;
     }
@@ -392,7 +392,7 @@ class EmitIRVisitor extends GJDepthFirst<String, String>{
             return var.type;
         }
 
-        return emitter.rvalue(currentClass, var.type, n.f0.accept(this, null));
+        return emitter.rvalue(currentClass, var);
     }
 
     // Trivial methods

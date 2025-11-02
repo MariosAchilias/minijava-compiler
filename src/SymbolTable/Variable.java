@@ -3,6 +3,7 @@ package SymbolTable;
 public class Variable {
     public String name;
     public String type;
+    public String register;
     public Variable(String type, String name) {
         this.name = name;
         this.type = type;
